@@ -5,17 +5,17 @@ struct CustomerMainView: View {
         TabView {
             CustomerHomeView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
-
-            Text("Booking")
+            
+            CustomerBookingView()
                 .tabItem { Label("Booking", systemImage: "wrench.fill") }
 
-            Text("Garage")
+            CustomerGarageView()
                 .tabItem { Label("Garage", systemImage: "car.fill") }
 
-            Text("Activity")
+            CustomerActivityView()
                 .tabItem { Label("Activity", systemImage: "clock.fill") }
 
-            Text("Profile")
+            CustomerProfileView()
                 .tabItem { Label("Profile", systemImage: "person.fill") }
         }
     }
