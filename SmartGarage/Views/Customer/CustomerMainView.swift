@@ -19,4 +19,5 @@ struct CustomerMainView: View {
                 .tabItem { Label("Profile", systemImage: "person.fill") }
         }
     }
+    
 }
