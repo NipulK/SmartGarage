@@ -6,7 +6,7 @@ struct StaffMainView: View {
             StaffDashboardView()
                 .tabItem { Label("Home", systemImage: "house") }
 
-            Text("Bookings")
+            StaffBookingView()
                 .tabItem { Label("Booking", systemImage: "wrench") }
 
             Text("Activity")
