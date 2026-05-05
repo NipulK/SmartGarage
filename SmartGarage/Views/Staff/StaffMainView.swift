@@ -3,7 +3,7 @@ import SwiftUI
 struct StaffMainView: View {
     var body: some View {
         TabView {
-            Text("Dashboard")
+            StaffDashboardView()
                 .tabItem { Label("Home", systemImage: "house") }
 
             Text("Bookings")
