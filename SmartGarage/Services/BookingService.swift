@@ -82,4 +82,24 @@ class BookingService: ObservableObject {
                 }
             }
     }
+    
+    func fetchAllBookings() {
+        isLoading = true
+
+        db.collection("bookings")
+            .getDocuments { snapshot, error in
+                DispatchQueue.main.async {
+                    self.isLoading = false
+
+                    if let error = error {
+                        self.errorMessage = error.localizedDescription
+                        return
+                    }
+
+                    self.bookings = snapshot?.documents.compactMap {
+                        try? $0.data(as: Booking.self)
+                    } ?? []
+                }
+            }
+    }
 }
