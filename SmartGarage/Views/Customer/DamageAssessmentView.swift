@@ -10,6 +10,7 @@ struct DamageAssessmentView: View {
                     .font(.title)
                     .fontWeight(.bold)
 
+                
                 Text("Upload vehicle photos and get instant damage analysis.")
                     .foregroundColor(.gray)
             }
