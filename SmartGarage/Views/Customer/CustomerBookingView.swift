@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct CustomerBookingView: View {
+    
+    
     @State private var selectedService = "Full System Diagnostic"
     @State private var selectedTime = "02:00 PM"
 
