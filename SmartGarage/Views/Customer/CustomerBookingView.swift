@@ -2,9 +2,13 @@ import SwiftUI
 
 struct CustomerBookingView: View {
     
+    @StateObject private var bookingService = BookingService()
+    @StateObject private var vehicleService = VehicleService()
     
+    @State private var selectedVehicle = ""
     @State private var selectedService = "Full System Diagnostic"
     @State private var selectedTime = "02:00 PM"
+    @State private var showSuccessMessage = false
 
     let services = ["Full System Diagnostic", "Oil Change & Brake Check", "Tire Rotation", "Battery Check"]
     let times = ["09:00 AM", "11:30 AM", "02:00 PM", "04:30 PM"]
@@ -39,7 +43,33 @@ struct CustomerBookingView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
-                    SelectionCard(icon: "car.fill", title: "Tesla Model 3", subtitle: "Midnight Silver")
+                    if vehicleService.isLoading {
+                        ProgressView("Loading vehicles...")
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white)
+                            .cornerRadius(14)
+                    } else if vehicleService.vehicles.isEmpty {
+                        Text("No vehicles found. Please add a vehicle first.")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white)
+                            .cornerRadius(14)
+                    } else {
+                        Picker("Vehicle", selection: $selectedVehicle) {
+                            ForEach(vehicleService.vehicles) { vehicle in
+                                Text("\(vehicle.make) \(vehicle.model)")
+                                    .tag(vehicle.id ?? "")
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(14)
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -121,9 +151,21 @@ struct CustomerBookingView: View {
                 .padding()
                 .background(Color.orange.opacity(0.12))
                 .cornerRadius(14)
+                
+                if !bookingService.errorMessage.isEmpty {
+                    Text(bookingService.errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                }
+
+                if showSuccessMessage {
+                    Text("Booking saved successfully!")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                }
 
                 Button {
-                    print("Booking confirmed")
+                    confirmBooking()
                 } label: {
                     HStack {
                         Text("Confirm Booking")
@@ -132,43 +174,45 @@ struct CustomerBookingView: View {
                     .fontWeight(.bold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(selectedVehicle.isEmpty ? Color.gray : Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(14)
                 }
+                .disabled(selectedVehicle.isEmpty)
             }
             .padding()
         }
         .background(Color(.systemGroupedBackground))
-    }
-}
-
-struct SelectionCard: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(.blue)
-
-            VStack(alignment: .leading) {
-                Text(title)
-                    .fontWeight(.semibold)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.down")
-                .foregroundColor(.gray)
+        .onAppear {
+            vehicleService.fetchVehicles()
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(14)
+        .onChange(of: vehicleService.vehicles.count) {
+            if selectedVehicle.isEmpty, let firstVehicle = vehicleService.vehicles.first {
+                selectedVehicle = firstVehicle.id ?? ""
+            }
+        }
+    }
+
+    func confirmBooking() {
+        guard let vehicle = vehicleService.vehicles.first(where: {
+            $0.id == selectedVehicle
+        }) else {
+            bookingService.errorMessage = "Please select a vehicle."
+            return
+        }
+
+        bookingService.createBooking(
+            vehicleId: vehicle.id ?? "",
+            vehicleName: "\(vehicle.make) \(vehicle.model)",
+            serviceType: selectedService,
+            bookingDate: "2025-05-06",
+            timeSlot: selectedTime
+        ) { success in
+            if success {
+                showSuccessMessage = true
+                print("Booking saved")
+            }
+        }
     }
 }
 
