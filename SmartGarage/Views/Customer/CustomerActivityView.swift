@@ -1,12 +1,13 @@
 import SwiftUI
 
 struct CustomerActivityView: View {
+    @StateObject private var bookingService = BookingService()
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
-                    
                     HStack {
                         Image(systemName: "line.3.horizontal")
                         Text("SmartGarage")
@@ -21,43 +22,34 @@ struct CustomerActivityView: View {
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("A complete maintenance history of your vehicle's health and service progress.")
+                    Text("Track your booking status and vehicle service progress.")
                         .font(.subheadline)
                         .foregroundColor(.gray)
 
-                    NavigationLink(destination: ServiceTrackingView()) {
-                        ActivityCard(
-                            icon: "wrench.and.screwdriver.fill",
-                            title: "Oil Change & Brake Check",
-                            subtitle: "Currently repairing • Porsche 911",
-                            tag: "IN PROGRESS",
-                            color: .orange
-                        )
+                    if bookingService.isLoading {
+                        ProgressView("Loading activities...")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    } else if bookingService.bookings.isEmpty {
+                        Text("No service activities found.")
+                            .foregroundColor(.gray)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    } else {
+                        ForEach(bookingService.bookings) { booking in
+                            NavigationLink {
+                                ServiceTrackingView(booking: booking)
+                            } label: {
+                                ActivityCard(
+                                    icon: iconForStatus(booking.status),
+                                    title: booking.serviceType,
+                                    subtitle: "\(booking.vehicleName) • \(booking.bookingDate) • \(booking.timeSlot)",
+                                    tag: booking.status.uppercased(),
+                                    color: colorForStatus(booking.status)
+                                )
+                            }
+                        }
                     }
-
-                    ActivityCard(
-                        icon: "checkmark.seal.fill",
-                        title: "Full Synthetic Oil Change",
-                        subtitle: "Completed • Oct 12, 2023",
-                        tag: "COMPLETED",
-                        color: .green
-                    )
-
-                    ActivityCard(
-                        icon: "exclamationmark.triangle.fill",
-                        title: "Health Alert",
-                        subtitle: "Brake pad wear detected",
-                        tag: "ALERT",
-                        color: .red
-                    )
-
-                    ActivityCard(
-                        icon: "calendar.badge.clock",
-                        title: "Booking Confirmed",
-                        subtitle: "Tesla Model 3 • Oct 14, 2024",
-                        tag: "BOOKED",
-                        color: .blue
-                    )
 
                     Text("End of history")
                         .font(.caption)
@@ -68,6 +60,39 @@ struct CustomerActivityView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
+            .onAppear {
+                bookingService.fetchBookings()
+            }
+        }
+    }
+
+    func colorForStatus(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "pending":
+            return .orange
+        case "inspection started":
+            return .blue
+        case "repair in progress":
+            return .purple
+        case "completed":
+            return .green
+        default:
+            return .gray
+        }
+    }
+
+    func iconForStatus(_ status: String) -> String {
+        switch status.lowercased() {
+        case "pending":
+            return "calendar.badge.clock"
+        case "inspection started":
+            return "magnifyingglass.circle.fill"
+        case "repair in progress":
+            return "wrench.and.screwdriver.fill"
+        case "completed":
+            return "checkmark.seal.fill"
+        default:
+            return "clock.fill"
         }
     }
 }
