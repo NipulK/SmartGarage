@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct AddVehicleView: View {
+    @StateObject private var vehicleService = VehicleService()
+    @Environment(\.dismiss) private var dismiss
+    
     @State private var make = ""
     @State private var model = ""
     @State private var year = ""
@@ -76,9 +79,26 @@ struct AddVehicleView: View {
                 .frame(height: 160)
                 .background(Color.gray.opacity(0.12))
                 .cornerRadius(18)
+                
+                if !vehicleService.errorMessage.isEmpty {
+                    Text(vehicleService.errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                }
 
                 Button {
-                    print("Vehicle added")
+                    vehicleService.addVehicle(
+                        make: make,
+                        model: model,
+                        year: year,
+                        color: color,
+                        plate: plate,
+                        vin: vin
+                    ) { success in
+                        if success {
+                            dismiss()
+                        }
+                    }
                 } label: {
                     Label("Add Vehicle", systemImage: "plus.circle")
                         .fontWeight(.bold)
