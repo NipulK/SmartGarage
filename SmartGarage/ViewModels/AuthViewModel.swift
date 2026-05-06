@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import FirebaseAuth
 
+
 class AuthViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage = ""
