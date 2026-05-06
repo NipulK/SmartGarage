@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct CustomerHomeView: View {
+    @StateObject private var vehicleService = VehicleService()
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
@@ -15,7 +17,6 @@ struct CustomerHomeView: View {
                     Image(systemName: "person.circle.fill")
                         .font(.title2)
                 }
-                
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Hello, Alex Rivera")
@@ -102,9 +103,28 @@ struct CustomerHomeView: View {
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
-                        VehicleCard(name: "Porsche 911", plate: "B-992-ARC")
-                        VehicleCard(name: "BMW M4", plate: "M-SUV-02")
+                        if vehicleService.isLoading {
+                            ProgressView()
+                                .padding()
+                        } else if vehicleService.vehicles.isEmpty {
+                            Text("No vehicles added yet")
+                                .foregroundColor(.gray)
+                                .padding()
+                        } else {
+                            ForEach(vehicleService.vehicles) { vehicle in
+                                VehicleCard(
+                                    name: "\(vehicle.make) \(vehicle.model)",
+                                    plate: vehicle.plate
+                                )
+                            }
+                        }
                     }
+                }
+                
+                if !vehicleService.errorMessage.isEmpty {
+                    Text(vehicleService.errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
                 }
                 
                 Text("Recent Updates")
@@ -116,6 +136,9 @@ struct CustomerHomeView: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            vehicleService.fetchVehicles()
+        }
     }
 }
 
