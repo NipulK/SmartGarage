@@ -5,6 +5,7 @@ struct ServiceTrackingView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
 
+                
                 Text("Vehicle in Service")
                     .font(.caption)
                     .fontWeight(.bold)
