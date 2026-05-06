@@ -7,11 +7,17 @@ struct StaffBookingView: View {
     let tabs = ["Today", "Upcoming", "In Progress"]
 
     var filteredBookings: [Booking] {
-        if selectedTab == "In Progress" {
-            return bookingService.bookings.filter { $0.status == "In Progress" }
-        } else if selectedTab == "Upcoming" {
-            return bookingService.bookings.filter { $0.status == "Pending" }
-        } else {
+        switch selectedTab {
+        case "Upcoming":
+            return bookingService.bookings.filter {
+                $0.status.lowercased() == "pending"
+            }
+        case "In Progress":
+            return bookingService.bookings.filter {
+                $0.status.lowercased() == "inspection started" ||
+                $0.status.lowercased() == "repair in progress"
+            }
+        default:
             return bookingService.bookings
         }
     }
@@ -20,10 +26,24 @@ struct StaffBookingView: View {
         NavigationStack {
             VStack {
                 HStack {
-                    Text("Bookings")
-                        .font(.title)
-                        .fontWeight(.bold)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Bookings")
+                            .font(.title)
+                            .fontWeight(.bold)
+
+                        Text("Manage all customer service bookings")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+
                     Spacer()
+
+                    Button {
+                        bookingService.fetchAllBookings()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.blue)
+                    }
                 }
                 .padding()
 
@@ -42,6 +62,7 @@ struct StaffBookingView: View {
                                 .cornerRadius(10)
                         }
                     }
+
                     Spacer()
                 }
                 .padding(.horizontal)
@@ -49,6 +70,14 @@ struct StaffBookingView: View {
                 if bookingService.isLoading {
                     Spacer()
                     ProgressView("Loading bookings...")
+                    Spacer()
+                } else if !bookingService.errorMessage.isEmpty {
+                    Spacer()
+                    Text(bookingService.errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .padding()
                     Spacer()
                 } else if filteredBookings.isEmpty {
                     Spacer()
@@ -59,14 +88,17 @@ struct StaffBookingView: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             ForEach(filteredBookings) { booking in
-                                NavigationLink(destination: StaffServiceDetailView(booking: booking)) {
+                                NavigationLink {
+                                    StaffServiceDetailView(booking: booking)
+                                } label: {
                                     StaffTaskCard(
-                                        customer: "Customer",
+                                        customer: "Customer ID: \(booking.userId.prefix(6))",
                                         vehicle: booking.vehicleName,
                                         service: booking.serviceType,
+                                        date: booking.bookingDate,
                                         time: booking.timeSlot,
-                                        status: booking.status.uppercased(),
-                                        color: booking.status == "Pending" ? .orange : .green
+                                        status: booking.status,
+                                        color: statusColor(booking.status)
                                     )
                                 }
                             }
@@ -81,18 +113,34 @@ struct StaffBookingView: View {
             }
         }
     }
+
+    func statusColor(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "pending":
+            return .orange
+        case "inspection started":
+            return .blue
+        case "repair in progress":
+            return .purple
+        case "completed":
+            return .green
+        default:
+            return .gray
+        }
+    }
 }
 
 struct StaffTaskCard: View {
     let customer: String
     let vehicle: String
     let service: String
+    let date: String
     let time: String
     let status: String
     let color: Color
 
     var body: some View {
-        HStack {
+        HStack(spacing: 14) {
             Image(systemName: "car.fill")
                 .foregroundColor(color)
                 .frame(width: 45, height: 45)
@@ -111,20 +159,26 @@ struct StaffTaskCard: View {
                 Text(service)
                     .font(.caption2)
                     .foregroundColor(.gray)
+
+                Text(date)
+                    .font(.caption2)
+                    .foregroundColor(.gray)
             }
 
             Spacer()
 
-            VStack(alignment: .trailing) {
+            VStack(alignment: .trailing, spacing: 6) {
                 Text(time)
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundColor(.black)
 
-                Text(status)
+                Text(status.uppercased())
                     .font(.caption2)
+                    .fontWeight(.bold)
                     .foregroundColor(color)
-                    .padding(6)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
                     .background(color.opacity(0.12))
                     .cornerRadius(8)
             }
