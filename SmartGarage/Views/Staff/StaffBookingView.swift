@@ -1,15 +1,24 @@
 import SwiftUI
 
 struct StaffBookingView: View {
+    @StateObject private var bookingService = BookingService()
     @State private var selectedTab = "Today"
 
     let tabs = ["Today", "Upcoming", "In Progress"]
 
+    var filteredBookings: [Booking] {
+        if selectedTab == "In Progress" {
+            return bookingService.bookings.filter { $0.status == "In Progress" }
+        } else if selectedTab == "Upcoming" {
+            return bookingService.bookings.filter { $0.status == "Pending" }
+        } else {
+            return bookingService.bookings
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack {
-
-                // Header
                 HStack {
                     Text("Bookings")
                         .font(.title)
@@ -18,7 +27,6 @@ struct StaffBookingView: View {
                 }
                 .padding()
 
-                // Tabs
                 HStack {
                     ForEach(tabs, id: \.self) { tab in
                         Button {
@@ -38,42 +46,39 @@ struct StaffBookingView: View {
                 }
                 .padding(.horizontal)
 
-                ScrollView {
-                    VStack(spacing: 16) {
-
-                        NavigationLink(destination: StaffServiceDetailView()) {
-                            StaffTaskCard(
-                                customer: "Alex Rivera",
-                                vehicle: "Porsche 911",
-                                service: "Full Service",
-                                time: "10:30 AM",
-                                status: "CHECK-IN",
-                                color: .blue
-                            )
+                if bookingService.isLoading {
+                    Spacer()
+                    ProgressView("Loading bookings...")
+                    Spacer()
+                } else if filteredBookings.isEmpty {
+                    Spacer()
+                    Text("No bookings found")
+                        .foregroundColor(.gray)
+                    Spacer()
+                } else {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            ForEach(filteredBookings) { booking in
+                                NavigationLink(destination: StaffServiceDetailView(booking: booking)) {
+                                    StaffTaskCard(
+                                        customer: "Customer",
+                                        vehicle: booking.vehicleName,
+                                        service: booking.serviceType,
+                                        time: booking.timeSlot,
+                                        status: booking.status.uppercased(),
+                                        color: booking.status == "Pending" ? .orange : .green
+                                    )
+                                }
+                            }
                         }
-
-                        StaffTaskCard(
-                            customer: "Sophia Chen",
-                            vehicle: "Tesla Model 3",
-                            service: "Battery Check",
-                            time: "12:00 PM",
-                            status: "PENDING",
-                            color: .orange
-                        )
-
-                        StaffTaskCard(
-                            customer: "David Miller",
-                            vehicle: "BMW M4",
-                            service: "Brake Repair",
-                            time: "02:30 PM",
-                            status: "IN PROGRESS",
-                            color: .green
-                        )
+                        .padding()
                     }
-                    .padding()
                 }
             }
             .background(Color(.systemGroupedBackground))
+            .onAppear {
+                bookingService.fetchAllBookings()
+            }
         }
     }
 }
@@ -97,6 +102,7 @@ struct StaffTaskCard: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(customer)
                     .font(.headline)
+                    .foregroundColor(.black)
 
                 Text(vehicle)
                     .font(.caption)
@@ -113,6 +119,7 @@ struct StaffTaskCard: View {
                 Text(time)
                     .font(.caption)
                     .fontWeight(.bold)
+                    .foregroundColor(.black)
 
                 Text(status)
                     .font(.caption2)
