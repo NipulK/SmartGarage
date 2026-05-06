@@ -102,6 +102,7 @@ struct StaffServiceDetailView: View {
                     .tint(.green)
                 }
 
+                
                 Spacer()
             }
             .padding()
