@@ -2,6 +2,7 @@ import SwiftUI
 import PhotosUI
 
 struct DamageAssessmentView: View {
+
     @StateObject private var vehicleService = VehicleService()
     @StateObject private var damageService = DamageDetectionService()
 
@@ -10,26 +11,43 @@ struct DamageAssessmentView: View {
     @State private var selectedImage: UIImage?
     @State private var showResult = false
 
+    @State private var selectedDamageType = "Dent"
+
+    let damageTypes = [
+        "Dent",
+        "Scratch",
+        "Broken Light",
+        "Front Bumper Damage",
+        "Windshield Crack"
+    ]
+
     var body: some View {
+
         ScrollView {
+
             VStack(spacing: 24) {
+
                 VStack(alignment: .leading, spacing: 8) {
+
                     Text("AI Damage Assessment")
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("Upload vehicle photos and get instant damage analysis.")
+                    Text("Upload vehicle photos and get instant AI damage analysis.")
                         .foregroundColor(.gray)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+                // VEHICLE PICKER
                 VStack(alignment: .leading, spacing: 12) {
+
                     Text("SELECT VEHICLE")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     if vehicleService.vehicles.isEmpty {
+
                         Text("No vehicles found. Please add a vehicle first.")
                             .font(.caption)
                             .foregroundColor(.gray)
@@ -37,9 +55,13 @@ struct DamageAssessmentView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(Color.white)
                             .cornerRadius(14)
+
                     } else {
+
                         Picker("Vehicle", selection: $selectedVehicle) {
+
                             ForEach(vehicleService.vehicles) { vehicle in
+
                                 Text("\(vehicle.make) \(vehicle.model)")
                                     .tag(vehicle.id ?? "")
                             }
@@ -52,8 +74,32 @@ struct DamageAssessmentView: View {
                     }
                 }
 
+                // DAMAGE TYPE PICKER
+                VStack(alignment: .leading, spacing: 12) {
+
+                    Text("DAMAGE TYPE")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.gray)
+
+                    Picker("Damage Type", selection: $selectedDamageType) {
+
+                        ForEach(damageTypes, id: \.self) { type in
+                            Text(type)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.white)
+                    .cornerRadius(14)
+                }
+
+                // IMAGE SECTION
                 VStack(spacing: 22) {
+
                     if let selectedImage {
+
                         Image(uiImage: selectedImage)
                             .resizable()
                             .scaledToFill()
@@ -61,7 +107,9 @@ struct DamageAssessmentView: View {
                             .frame(maxWidth: .infinity)
                             .clipped()
                             .cornerRadius(18)
+
                     } else {
+
                         Image(systemName: "camera.badge.ellipsis")
                             .font(.system(size: 42))
                             .foregroundColor(.blue)
@@ -73,12 +121,13 @@ struct DamageAssessmentView: View {
                             .font(.title3)
                             .fontWeight(.bold)
 
-                        Text("Capture the damaged area clearly for better assessment accuracy.")
+                        Text("Capture the damaged area clearly for better AI accuracy.")
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
                     }
 
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
+
                         Label("Choose Image", systemImage: "photo")
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
@@ -89,26 +138,37 @@ struct DamageAssessmentView: View {
                     }
 
                     if !damageService.errorMessage.isEmpty {
+
                         Text(damageService.errorMessage)
                             .foregroundColor(.red)
                             .font(.caption)
                     }
 
                     Button {
+
                         scanDamage()
+
                     } label: {
+
                         if damageService.isLoading {
+
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                                 .padding()
+
                         } else {
-                            Label("Scan for Damage", systemImage: "viewfinder")
+
+                            Label("Analyze Damage", systemImage: "viewfinder")
                                 .fontWeight(.bold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
                         }
                     }
-                    .background(selectedImage == nil || selectedVehicle.isEmpty ? Color.gray : Color.blue)
+                    .background(
+                        selectedImage == nil || selectedVehicle.isEmpty
+                        ? Color.gray
+                        : Color.blue
+                    )
                     .foregroundColor(.white)
                     .cornerRadius(14)
                     .disabled(selectedImage == nil || selectedVehicle.isEmpty)
@@ -120,37 +180,57 @@ struct DamageAssessmentView: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground))
+
         .onAppear {
+
             vehicleService.fetchVehicles()
         }
+
         .onChange(of: vehicleService.vehicles.count) {
-            if selectedVehicle.isEmpty, let firstVehicle = vehicleService.vehicles.first {
+
+            if selectedVehicle.isEmpty,
+               let firstVehicle = vehicleService.vehicles.first {
+
                 selectedVehicle = firstVehicle.id ?? ""
             }
         }
+
         .onChange(of: selectedPhoto) {
+
             loadSelectedImage()
         }
+
         .navigationDestination(isPresented: $showResult) {
+
             DamageResultView()
         }
     }
 
+    // LOAD IMAGE
     func loadSelectedImage() {
+
         Task {
+
             if let data = try? await selectedPhoto?.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
+
                 await MainActor.run {
+
                     selectedImage = image
                 }
             }
         }
     }
 
+    // ANALYZE DAMAGE
     func scanDamage() {
+
         guard let selectedImage else { return }
 
-        guard let vehicle = vehicleService.vehicles.first(where: { $0.id == selectedVehicle }) else {
+        guard let vehicle = vehicleService.vehicles.first(where: {
+            $0.id == selectedVehicle
+        }) else {
+
             damageService.errorMessage = "Please select a vehicle."
             return
         }
@@ -158,9 +238,12 @@ struct DamageAssessmentView: View {
         damageService.analyzeDamage(
             image: selectedImage,
             vehicleId: vehicle.id ?? "",
-            vehicleName: "\(vehicle.make) \(vehicle.model)"
+            vehicleName: "\(vehicle.make) \(vehicle.model)",
+            damageType: selectedDamageType
         ) { success in
+
             if success {
+
                 showResult = true
             }
         }
@@ -168,7 +251,9 @@ struct DamageAssessmentView: View {
 }
 
 #Preview {
+
     NavigationStack {
+
         DamageAssessmentView()
     }
 }

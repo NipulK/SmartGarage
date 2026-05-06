@@ -1,15 +1,24 @@
 import SwiftUI
 
 struct DamageResultView: View {
+
+    var damageType: String = "Front Bumper Damage"
+    var severity: String = "High"
+    var confidence: String = "98%"
+    var estimatedCost: String = "$450 - $600"
+    var vehicleName: String = "Porsche 911"
+
     var body: some View {
+
         ScrollView {
+
             VStack(alignment: .leading, spacing: 22) {
 
                 Text("Assessment Report")
                     .font(.caption)
                     .foregroundColor(.blue)
 
-                Text("Analysis Complete")
+                Text("AI Analysis Complete")
                     .font(.title)
                     .fontWeight(.bold)
 
@@ -17,33 +26,50 @@ struct DamageResultView: View {
                     .fill(Color.gray.opacity(0.25))
                     .frame(height: 220)
                     .overlay(
-                        Image(systemName: "car.fill")
-                            .font(.system(size: 70))
-                            .foregroundColor(.gray)
+                        VStack(spacing: 12) {
+
+                            Image(systemName: "car.fill")
+                                .font(.system(size: 70))
+                                .foregroundColor(.gray)
+
+                            Text(vehicleName)
+                                .fontWeight(.bold)
+                                .foregroundColor(.black)
+                        }
                     )
 
                 VStack(alignment: .leading, spacing: 18) {
+
                     HStack {
+
                         Image(systemName: "brain.head.profile")
                             .foregroundColor(.blue)
 
                         VStack(alignment: .leading) {
+
                             Text("AI Analysis Result")
                                 .font(.caption)
                                 .foregroundColor(.gray)
 
-                            Text("Repair Recommended")
+                            Text(severity == "High"
+                                 ? "Immediate Repair Recommended"
+                                 : "Repair Recommended")
                                 .font(.title3)
                                 .fontWeight(.bold)
-                                .foregroundColor(.orange)
+                                .foregroundColor(
+                                    severity == "High"
+                                    ? .red
+                                    : .orange
+                                )
                         }
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
+
                         Label("Damage Detected", systemImage: "info.circle")
                             .foregroundColor(.blue)
 
-                        Text("Structural damage detected in front bumper. Impact has compromised the lower chassis mounting points.")
+                        Text(damageDescription())
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
@@ -52,12 +78,13 @@ struct DamageResultView: View {
                     .cornerRadius(14)
 
                     HStack {
-                        Text("Estimated Cost")
+
+                        Text("Estimated Repair Cost")
                             .fontWeight(.semibold)
 
                         Spacer()
 
-                        Text("$450 - $600")
+                        Text(estimatedCost)
                             .fontWeight(.bold)
                             .foregroundColor(.blue)
                     }
@@ -70,13 +97,51 @@ struct DamageResultView: View {
                 .cornerRadius(20)
 
                 HStack {
-                    ResultBox(title: "Confidence", value: "98%")
-                    ResultBox(title: "Severity", value: "High ⚠️")
+
+                    ResultBox(
+                        title: "Confidence",
+                        value: confidence
+                    )
+
+                    ResultBox(
+                        title: "Severity",
+                        value: severity
+                    )
                 }
 
+                VStack(alignment: .leading, spacing: 14) {
+
+                    Text("AI Summary")
+                        .font(.headline)
+
+                    summaryRow(
+                        icon: "checkmark.circle.fill",
+                        title: "Damage Type",
+                        value: damageType
+                    )
+
+                    summaryRow(
+                        icon: "gauge.medium",
+                        title: "Severity",
+                        value: severity
+                    )
+
+                    summaryRow(
+                        icon: "dollarsign.circle.fill",
+                        title: "Estimated Cost",
+                        value: estimatedCost
+                    )
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(20)
+
                 Button {
+
                     print("Book repair")
+
                 } label: {
+
                     Text("Book This Repair Now")
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity)
@@ -87,8 +152,11 @@ struct DamageResultView: View {
                 }
 
                 Button {
+
                     print("Save later")
+
                 } label: {
+
                     Text("Save for Later")
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
@@ -104,23 +172,75 @@ struct DamageResultView: View {
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
     }
+
+    func damageDescription() -> String {
+
+        switch damageType {
+
+        case "Body Dent":
+            return "Surface dent detected on the body panel. Metal deformation identified."
+
+        case "Paint Scratch":
+            return "Paint layer scratches detected. Cosmetic repair recommended."
+
+        case "Headlight Damage":
+            return "Front lighting unit damage detected. Replacement may be required."
+
+        case "Front Bumper Damage":
+            return "Front bumper impact damage detected with structural deformation."
+
+        case "Windshield Crack":
+            return "Windshield crack detected. Visibility and safety may be affected."
+
+        default:
+            return "Vehicle damage detected by AI analysis."
+        }
+    }
+
+    @ViewBuilder
+    func summaryRow(
+        icon: String,
+        title: String,
+        value: String
+    ) -> some View {
+
+        HStack {
+
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+
+            Text(title)
+
+            Spacer()
+
+            Text(value)
+                .fontWeight(.bold)
+        }
+    }
 }
 
 struct ResultBox: View {
+
     let title: String
     let value: String
 
     var body: some View {
+
         VStack(alignment: .leading, spacing: 10) {
+
             Text(title.uppercased())
                 .font(.caption2)
                 .foregroundColor(.gray)
 
             Text(value)
-                .font(.title2)
+                .font(.title3)
                 .fontWeight(.bold)
 
-            ProgressView(value: title == "Confidence" ? 0.98 : 0.8)
+            ProgressView(
+                value: title == "Confidence"
+                ? 0.96
+                : 0.8
+            )
         }
         .padding()
         .frame(maxWidth: .infinity)
@@ -130,5 +250,15 @@ struct ResultBox: View {
 }
 
 #Preview {
-    DamageResultView()
+
+    NavigationStack {
+
+        DamageResultView(
+            damageType: "Front Bumper Damage",
+            severity: "High",
+            confidence: "98%",
+            estimatedCost: "$450 - $600",
+            vehicleName: "Toyota Yaris"
+        )
+    }
 }
