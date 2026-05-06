@@ -6,6 +6,7 @@ struct CustomerActivityView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
+                    
                     HStack {
                         Image(systemName: "line.3.horizontal")
                         Text("SmartGarage")
