@@ -1,3 +1,4 @@
+import FirebaseFirestore
 import Foundation
 import Combine
 import FirebaseAuth
@@ -36,20 +37,47 @@ class AuthViewModel: ObservableObject {
     ) {
         isLoading = true
         errorMessage = ""
-
+        
         Auth.auth().createUser(withEmail: email, password: password) { result, error in
             DispatchQueue.main.async {
                 self.isLoading = false
-
+                
                 if let error = error {
                     self.errorMessage = error.localizedDescription
                     completion(false)
                     return
                 }
-
-                completion(true)
+                
+                guard let uid = result?.user.uid else {
+                    self.errorMessage = "User ID not found."
+                    completion(false)
+                    return
+                }
+                
+                let userData: [String: Any] = [
+                    "uid": uid,
+                    "username": username.lowercased(),
+                    "fullName": fullName,
+                    "phone": phone,
+                    "email": email,
+                    "role": "customer",
+                    "createdAt": Timestamp()
+                ]
+                
+                Firestore.firestore()
+                    .collection("users")
+                    .document(uid)
+                    .setData(userData) { error in
+                        DispatchQueue.main.async {
+                            if let error = error {
+                                self.errorMessage = error.localizedDescription
+                                completion(false)
+                            } else {
+                                completion(true)
+                            }
+                        }
+                    }
             }
         }
     }
-    
 }

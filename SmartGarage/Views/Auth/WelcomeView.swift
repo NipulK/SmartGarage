@@ -54,6 +54,14 @@ struct WelcomeView: View {
                     .padding(.horizontal)
 
                     Spacer()
+                    
+                    NavigationLink("Create Account", destination: RegisterView())
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    
+                        .padding(.horizontal)
+
+                        Spacer()
                 }
             }
         }
