@@ -16,7 +16,7 @@ struct LoginView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
-            TextField("Email", text: $email)
+            TextField("Customer username", text: $email)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .padding()
@@ -62,13 +62,30 @@ struct LoginView: View {
     }
     
     func login() {
-        authVM.login(email: email, password: password) { success in
+
+        var loginEmail = ""
+
+        // STAFF LOGIN
+        if email.lowercased().hasPrefix("s_") {
+
+            loginEmail = "\(email.lowercased())@staff.smartgarage.com"
+
+        } else {
+
+            // CUSTOMER LOGIN
+            loginEmail = "\(email.lowercased())@smartgarage.com"
+        }
+
+        authVM.login(email: loginEmail, password: password) { success in
+
             if success {
-                if email.lowercased().hasPrefix("c_") {
-                    goToCustomer = true
-                } else if email.lowercased().hasPrefix("s_") {
+
+                if email.lowercased().hasPrefix("s_") {
+
                     goToStaff = true
+
                 } else {
+
                     goToCustomer = true
                 }
             }
