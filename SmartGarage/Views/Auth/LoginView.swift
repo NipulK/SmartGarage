@@ -43,6 +43,7 @@ struct LoginView: View {
             NavigationLink("", destination: StaffMainView(), isActive: $goToStaff)
         }
     }
+    
 
     func login() {
         if username.uppercased().hasPrefix("C_") {
