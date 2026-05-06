@@ -24,4 +24,31 @@ class AuthViewModel: ObservableObject {
             }
         }
     }
+    
+    func register(
+        email: String,
+        password: String,
+        username: String,
+        fullName: String,
+        phone: String,
+        completion: @escaping (Bool) -> Void
+    ) {
+        isLoading = true
+        errorMessage = ""
+
+        Auth.auth().createUser(withEmail: email, password: password) { result, error in
+            DispatchQueue.main.async {
+                self.isLoading = false
+
+                if let error = error {
+                    self.errorMessage = error.localizedDescription
+                    completion(false)
+                    return
+                }
+
+                completion(true)
+            }
+        }
+    }
+    
 }
