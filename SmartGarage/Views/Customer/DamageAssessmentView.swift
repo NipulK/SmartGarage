@@ -1,90 +1,169 @@
 import SwiftUI
+import PhotosUI
 
 struct DamageAssessmentView: View {
+    @StateObject private var vehicleService = VehicleService()
+    @StateObject private var damageService = DamageDetectionService()
+
+    @State private var selectedVehicle = ""
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var selectedImage: UIImage?
     @State private var showResult = false
 
     var body: some View {
-        VStack(spacing: 24) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("AI Damage Assessment")
-                    .font(.title)
-                    .fontWeight(.bold)
-
-                
-                Text("Upload vehicle photos and get instant damage analysis.")
-                    .foregroundColor(.gray)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(spacing: 22) {
-                Image(systemName: "camera.badge.ellipsis")
-                    .font(.system(size: 42))
-                    .foregroundColor(.blue)
-                    .frame(width: 90, height: 90)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(25)
-
-                Text("Upload Vehicle Photos")
-                    .font(.title3)
-                    .fontWeight(.bold)
-
-                Text("Capture the damage area clearly for better assessment accuracy.")
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    PhotoBox(title: "Front View")
-                    PhotoBox(title: "Rear View")
-                    PhotoBox(title: "Left View")
-                    PhotoBox(title: "Right View")
-                }
-
-                Button {
-                    showResult = true
-                } label: {
-                    Label("Scan for Damage", systemImage: "viewfinder")
+        ScrollView {
+            VStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("AI Damage Assessment")
+                        .font(.title)
                         .fontWeight(.bold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(14)
+
+                    Text("Upload vehicle photos and get instant damage analysis.")
+                        .foregroundColor(.gray)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("SELECT VEHICLE")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.gray)
+
+                    if vehicleService.vehicles.isEmpty {
+                        Text("No vehicles found. Please add a vehicle first.")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white)
+                            .cornerRadius(14)
+                    } else {
+                        Picker("Vehicle", selection: $selectedVehicle) {
+                            ForEach(vehicleService.vehicles) { vehicle in
+                                Text("\(vehicle.make) \(vehicle.model)")
+                                    .tag(vehicle.id ?? "")
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(14)
+                    }
+                }
+
+                VStack(spacing: 22) {
+                    if let selectedImage {
+                        Image(uiImage: selectedImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 220)
+                            .frame(maxWidth: .infinity)
+                            .clipped()
+                            .cornerRadius(18)
+                    } else {
+                        Image(systemName: "camera.badge.ellipsis")
+                            .font(.system(size: 42))
+                            .foregroundColor(.blue)
+                            .frame(width: 90, height: 90)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(25)
+
+                        Text("Upload Vehicle Photo")
+                            .font(.title3)
+                            .fontWeight(.bold)
+
+                        Text("Capture the damaged area clearly for better assessment accuracy.")
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Label("Choose Image", systemImage: "photo")
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white)
+                            .foregroundColor(.blue)
+                            .cornerRadius(14)
+                    }
+
+                    if !damageService.errorMessage.isEmpty {
+                        Text(damageService.errorMessage)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                    }
+
+                    Button {
+                        scanDamage()
+                    } label: {
+                        if damageService.isLoading {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                        } else {
+                            Label("Scan for Damage", systemImage: "viewfinder")
+                                .fontWeight(.bold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                        }
+                    }
+                    .background(selectedImage == nil || selectedVehicle.isEmpty ? Color.gray : Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(14)
+                    .disabled(selectedImage == nil || selectedVehicle.isEmpty)
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(24)
             }
             .padding()
-            .background(Color.white)
-            .cornerRadius(24)
-
-            Spacer()
         }
-        .padding()
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            vehicleService.fetchVehicles()
+        }
+        .onChange(of: vehicleService.vehicles.count) {
+            if selectedVehicle.isEmpty, let firstVehicle = vehicleService.vehicles.first {
+                selectedVehicle = firstVehicle.id ?? ""
+            }
+        }
+        .onChange(of: selectedPhoto) {
+            loadSelectedImage()
+        }
         .navigationDestination(isPresented: $showResult) {
             DamageResultView()
         }
     }
-}
 
-struct PhotoBox: View {
-    let title: String
-
-    var body: some View {
-        VStack {
-            Image(systemName: "car.fill")
-                .foregroundColor(.gray)
-
-            Text(title.uppercased())
-                .font(.caption2)
-                .foregroundColor(.gray)
+    func loadSelectedImage() {
+        Task {
+            if let data = try? await selectedPhoto?.loadTransferable(type: Data.self),
+               let image = UIImage(data: data) {
+                await MainActor.run {
+                    selectedImage = image
+                }
+            }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 95)
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(14)
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.gray.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5]))
-        )
+    }
+
+    func scanDamage() {
+        guard let selectedImage else { return }
+
+        guard let vehicle = vehicleService.vehicles.first(where: { $0.id == selectedVehicle }) else {
+            damageService.errorMessage = "Please select a vehicle."
+            return
+        }
+
+        damageService.analyzeDamage(
+            image: selectedImage,
+            vehicleId: vehicle.id ?? "",
+            vehicleName: "\(vehicle.make) \(vehicle.model)"
+        ) { success in
+            if success {
+                showResult = true
+            }
+        }
     }
 }
 
