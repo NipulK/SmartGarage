@@ -1,52 +1,128 @@
 import SwiftUI
 
 struct StaffServiceDetailView: View {
-    @State private var progress = 0.3
+
+    let booking: Booking
+
+    @State private var progress: Double = 0.3
+    @State private var currentStatus = "Pending"
 
     var body: some View {
+
         ScrollView {
+
             VStack(alignment: .leading, spacing: 20) {
 
                 Text("Service Details")
-                    .font(.title)
+                    .font(.largeTitle)
                     .fontWeight(.bold)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Customer: Alex Rivera")
-                    Text("Vehicle: Porsche 911")
-                    Text("Service: Full Service")
+                // CUSTOMER & VEHICLE DETAILS
+                VStack(alignment: .leading, spacing: 12) {
+
+                    Label("Vehicle Information", systemImage: "car.fill")
+                        .font(.headline)
+
+                    Divider()
+
+                    Text("Vehicle: \(booking.vehicleName)")
+                        .fontWeight(.semibold)
+
+                    Text("Service: \(booking.serviceType)")
+
+                    Text("Date: \(booking.bookingDate)")
+
+                    Text("Time: \(booking.timeSlot)")
+
+                    Text("Status: \(currentStatus)")
+                        .foregroundColor(.blue)
+                        .fontWeight(.bold)
+
                 }
                 .padding()
                 .background(Color.white)
-                .cornerRadius(14)
+                .cornerRadius(18)
+                .shadow(color: .gray.opacity(0.1), radius: 5)
 
-                Text("Progress")
-                    .font(.headline)
+                // PROGRESS SECTION
+                VStack(alignment: .leading, spacing: 12) {
 
-                ProgressView(value: progress)
+                    Text("Service Progress")
+                        .font(.headline)
 
-                VStack(spacing: 14) {
-                    Button("Start Inspection") {
-                        progress = 0.5
-                    }
+                    ProgressView(value: progress)
 
-                    Button("Start Repair") {
-                        progress = 0.75
-                    }
+                    Text("\(Int(progress * 100))% Completed")
+                        .font(.caption)
+                        .foregroundColor(.gray)
 
-                    Button("Complete Service") {
-                        progress = 1.0
-                    }
                 }
-                .buttonStyle(.borderedProminent)
+                .padding()
+                .background(Color.white)
+                .cornerRadius(18)
 
+                // ACTION BUTTONS
+                VStack(spacing: 14) {
+
+                    Button {
+
+                        progress = 0.3
+                        currentStatus = "Inspection Started"
+
+                    } label: {
+
+                        Label("Start Inspection", systemImage: "checklist")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button {
+
+                        progress = 0.7
+                        currentStatus = "Repair In Progress"
+
+                    } label: {
+
+                        Label("Start Repair", systemImage: "wrench.and.screwdriver")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button {
+
+                        progress = 1.0
+                        currentStatus = "Completed"
+
+                    } label: {
+
+                        Label("Complete Service", systemImage: "checkmark.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                }
+
+                Spacer()
             }
             .padding()
         }
         .background(Color(.systemGroupedBackground))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #Preview {
-    StaffServiceDetailView()
+
+    StaffServiceDetailView(
+        booking: Booking(
+            userId: "1",
+            vehicleId: "1",
+            vehicleName: "Toyota Yaris",
+            serviceType: "Oil Change",
+            bookingDate: "2025-05-06",
+            timeSlot: "02:00 PM",
+            status: "Pending",
+            createdAt: Date()
+        )
+    )
 }
