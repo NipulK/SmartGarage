@@ -139,6 +139,7 @@ struct StaffServiceDetailView: View {
     }
 }
 
+
 #Preview {
     StaffServiceDetailView(
         booking: Booking(

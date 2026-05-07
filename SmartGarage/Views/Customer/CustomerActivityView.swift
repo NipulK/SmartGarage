@@ -51,6 +51,7 @@ struct CustomerActivityView: View {
                         }
                     }
 
+                    
                     Text("End of history")
                         .font(.caption)
                         .foregroundColor(.gray)

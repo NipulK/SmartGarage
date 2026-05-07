@@ -105,6 +105,7 @@ class BookingService: ObservableObject {
                 }
             }
     }
+    
 
     func fetchAllBookings() {
         isLoading = true
