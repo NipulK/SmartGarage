@@ -78,6 +78,7 @@ class ChatService: ObservableObject {
                         self.errorMessage = error.localizedDescription
                         return
                     }
+                    
 
                     self.messages = snapshot?.documents.compactMap {
                         try? $0.data(as: Message.self)
