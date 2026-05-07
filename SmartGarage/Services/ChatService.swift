@@ -94,6 +94,7 @@ class ChatService: ObservableObject {
                         }
                     }
 
+                    
                     self.messages = newMessages
                 }
             }

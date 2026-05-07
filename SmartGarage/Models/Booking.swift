@@ -1,6 +1,7 @@
 import Foundation
 import FirebaseFirestore
 
+
 struct Booking: Identifiable, Codable {
     @DocumentID var id: String?
 

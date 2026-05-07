@@ -115,4 +115,5 @@ struct ChatView: View {
         ),
         senderName: "Alex"
     )
+    
 }

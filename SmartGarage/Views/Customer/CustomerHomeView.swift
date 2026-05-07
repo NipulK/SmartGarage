@@ -18,6 +18,7 @@ struct CustomerHomeView: View {
                         .font(.title2)
                 }
                 
+                
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Hello, Alex Rivera")
                         .font(.title2)
