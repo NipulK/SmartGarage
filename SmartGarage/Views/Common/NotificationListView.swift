@@ -50,7 +50,7 @@ struct NotificationListView: View {
         .navigationTitle("Notifications")
         .onAppear {
 
-            notificationService.fetchNotifications()
+            notificationService.fetchNotifications(userRole: "customer")
         }
     }
 }
