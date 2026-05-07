@@ -3,6 +3,9 @@ import SwiftUI
 struct CustomerHomeView: View {
     @StateObject private var vehicleService = VehicleService()
     
+    @StateObject private var notificationService =
+    AppNotificationService()
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
@@ -13,7 +16,25 @@ struct CustomerHomeView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.blue)
                     Spacer()
-                    Image(systemName: "bell")
+                    NavigationLink {
+
+                        NotificationListView()
+
+                    } label: {
+
+                        ZStack(alignment: .topTrailing) {
+
+                            Image(systemName: "bell")
+                                .font(.title3)
+
+                            if notificationService.unreadCount > 0 {
+
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 12, height: 12)
+                            }
+                        }
+                    }
                     Image(systemName: "person.circle.fill")
                         .font(.title2)
                 }
@@ -139,6 +160,8 @@ struct CustomerHomeView: View {
         .background(Color(.systemGroupedBackground))
         .onAppear {
             vehicleService.fetchVehicles()
+            
+            notificationService.fetchNotifications()
         }
     }
 }

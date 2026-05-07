@@ -87,7 +87,7 @@ struct ChatView: View {
         }
 
         chatService.sendMessage(
-            bookingId: bookingId,
+            booking: booking,
             senderName: senderName,
             messageText: messageText
         ) { success in

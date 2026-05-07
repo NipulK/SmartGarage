@@ -99,4 +99,72 @@ class ChatService: ObservableObject {
                 }
             }
     }
+    
+    func sendMessage(
+        booking: Booking,
+        senderName: String,
+        messageText: String,
+        completion: @escaping (Bool) -> Void
+    ) {
+
+        guard let senderId = Auth.auth().currentUser?.uid else {
+            errorMessage = "User not logged in"
+            completion(false)
+            return
+        }
+
+        guard let bookingId = booking.id else {
+            completion(false)
+            return
+        }
+
+        let message = Message(
+            senderId: senderId,
+            senderName: senderName,
+            messageText: messageText,
+            bookingId: bookingId,
+            createdAt: Date()
+        )
+
+        do {
+
+            _ = try db.collection("chatRooms")
+                .document(bookingId)
+                .collection("messages")
+                .addDocument(from: message) { error in
+
+                    DispatchQueue.main.async {
+
+                        if let error = error {
+
+                            self.errorMessage = error.localizedDescription
+                            completion(false)
+
+                        } else {
+
+                            let receiverId =
+                            senderName == "Staff"
+                            ? booking.userId
+                            : "staff"
+
+                            self.notificationService.createNotification(
+                                receiverId: receiverId,
+                                senderName: senderName,
+                                bookingId: bookingId,
+                                title: "New Message",
+                                body: messageText
+                            )
+
+                            completion(true)
+                        }
+                    }
+                }
+
+        } catch {
+
+            errorMessage = error.localizedDescription
+            completion(false)
+        }
+    }
+    
 }
