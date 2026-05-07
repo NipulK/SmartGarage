@@ -3,6 +3,7 @@ import FirebaseFirestore
 import FirebaseAuth
 import Combine
 
+
 class AppNotificationService: ObservableObject {
 
     @Published var notifications: [AppNotification] = []

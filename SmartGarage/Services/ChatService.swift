@@ -3,6 +3,7 @@ import FirebaseFirestore
 import FirebaseAuth
 import Combine
 
+
 class ChatService: ObservableObject {
 
     @Published var messages: [Message] = []
