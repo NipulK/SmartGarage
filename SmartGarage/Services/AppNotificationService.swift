@@ -3,13 +3,11 @@ import FirebaseFirestore
 import FirebaseAuth
 import Combine
 
-
 class AppNotificationService: ObservableObject {
 
     @Published var notifications: [AppNotification] = []
 
     private let db = Firestore.firestore()
-
     private var listener: ListenerRegistration?
 
     deinit {
@@ -23,7 +21,6 @@ class AppNotificationService: ObservableObject {
         title: String,
         body: String
     ) {
-
         let notification = AppNotification(
             receiverId: receiverId,
             senderName: senderName,
@@ -35,31 +32,24 @@ class AppNotificationService: ObservableObject {
         )
 
         do {
-
-            _ = try db.collection("notifications")
-                .addDocument(from: notification)
-
+            _ = try db.collection("notifications").addDocument(from: notification)
         } catch {
-
             print(error.localizedDescription)
         }
     }
 
-    func fetchNotifications() {
-
-        guard let userId = Auth.auth().currentUser?.uid else {
-            return
-        }
+    func fetchNotifications(userRole: String) {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
 
         listener?.remove()
 
+        let receiverValue = userRole == "staff" ? "staff" : userId
+
         listener = db.collection("notifications")
-            .whereField("receiverId", isEqualTo: userId)
+            .whereField("receiverId", isEqualTo: receiverValue)
             .order(by: "createdAt", descending: true)
             .addSnapshotListener { snapshot, error in
-
                 DispatchQueue.main.async {
-
                     if let error = error {
                         print(error.localizedDescription)
                         return
@@ -73,7 +63,6 @@ class AppNotificationService: ObservableObject {
     }
 
     func markAsRead(notificationId: String) {
-
         db.collection("notifications")
             .document(notificationId)
             .updateData([
@@ -82,16 +71,10 @@ class AppNotificationService: ObservableObject {
     }
 
     var unreadCount: Int {
-
-        notifications.filter {
-            !$0.isRead
-        }.count
+        notifications.filter { !$0.isRead }.count
     }
 
     var latestUnreadNotification: AppNotification? {
-
-        notifications.first(where: {
-            !$0.isRead
-        })
+        notifications.first { !$0.isRead }
     }
 }

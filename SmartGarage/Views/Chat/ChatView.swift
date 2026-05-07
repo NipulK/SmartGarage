@@ -86,15 +86,12 @@ struct ChatView: View {
             return
         }
 
-        
         chatService.sendMessage(
             booking: booking,
             senderName: senderName,
             messageText: messageText
         ) { success in
-
             if success {
-
                 messageText = ""
             }
         }
