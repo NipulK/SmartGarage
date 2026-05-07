@@ -71,9 +71,15 @@ struct ServiceTrackingView: View {
                 .background(Color.white)
                 .cornerRadius(18)
 
-                Button {
-                    print("Message advisor")
+                NavigationLink {
+
+                    ChatView(
+                        booking: booking,
+                        senderName: "Customer"
+                    )
+
                 } label: {
+
                     Text("Message Garage")
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity)

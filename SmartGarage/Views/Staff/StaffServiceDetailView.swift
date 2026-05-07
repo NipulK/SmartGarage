@@ -96,6 +96,21 @@ struct StaffServiceDetailView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
+                    
+                    NavigationLink {
+
+                        ChatView(
+                            booking: booking,
+                            senderName: "Staff"
+                        )
+
+                    } label: {
+
+                        Label("Open Chat", systemImage: "message.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
                 }
 
                 Spacer()
