@@ -79,10 +79,22 @@ class ChatService: ObservableObject {
                         return
                     }
                     
-
-                    self.messages = snapshot?.documents.compactMap {
+                    let newMessages = snapshot?.documents.compactMap {
                         try? $0.data(as: Message.self)
                     } ?? []
+
+                    if let lastMessage = newMessages.last {
+
+                        if lastMessage.senderId != Auth.auth().currentUser?.uid {
+
+                            NotificationManager.shared.sendLocalNotification(
+                                title: "New Garage Message",
+                                body: lastMessage.messageText
+                            )
+                        }
+                    }
+
+                    self.messages = newMessages
                 }
             }
     }
