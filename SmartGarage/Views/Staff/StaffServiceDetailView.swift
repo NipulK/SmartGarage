@@ -6,29 +6,18 @@ struct StaffServiceDetailView: View {
 
     @StateObject private var bookingService = BookingService()
 
-    @State private var progress: Double = 0.3
+    @State private var progress: Double
     @State private var currentStatus: String
     @State private var showSuccessMessage = false
 
     init(booking: Booking) {
         self.booking = booking
         _currentStatus = State(initialValue: booking.status)
-
-        if booking.status.lowercased() == "inspection started" {
-            _progress = State(initialValue: 0.3)
-        } else if booking.status.lowercased() == "repair in progress" {
-            _progress = State(initialValue: 0.7)
-        } else if booking.status.lowercased() == "completed" {
-            _progress = State(initialValue: 1.0)
-        } else {
-            _progress = State(initialValue: 0.1)
-        }
+        _progress = State(initialValue: StaffServiceDetailView.progressValue(for: booking.status))
     }
 
     var body: some View {
-
         ScrollView {
-
             VStack(alignment: .leading, spacing: 20) {
 
                 Text("Service Details")
@@ -36,7 +25,6 @@ struct StaffServiceDetailView: View {
                     .fontWeight(.bold)
 
                 VStack(alignment: .leading, spacing: 12) {
-
                     Label("Vehicle Information", systemImage: "car.fill")
                         .font(.headline)
 
@@ -50,7 +38,7 @@ struct StaffServiceDetailView: View {
                     Text("Time: \(booking.timeSlot)")
 
                     Text("Status: \(currentStatus)")
-                        .foregroundColor(.blue)
+                        .foregroundColor(statusColor(currentStatus))
                         .fontWeight(.bold)
                 }
                 .padding()
@@ -58,7 +46,6 @@ struct StaffServiceDetailView: View {
                 .cornerRadius(18)
 
                 VStack(alignment: .leading, spacing: 12) {
-
                     Text("Service Progress")
                         .font(.headline)
 
@@ -85,9 +72,8 @@ struct StaffServiceDetailView: View {
                 }
 
                 VStack(spacing: 14) {
-
                     Button {
-                        updateStatus("Inspection Started", progressValue: 0.3)
+                        updateStatus("Inspection Started")
                     } label: {
                         Label("Start Inspection", systemImage: "checklist")
                             .frame(maxWidth: .infinity)
@@ -95,7 +81,7 @@ struct StaffServiceDetailView: View {
                     .buttonStyle(.borderedProminent)
 
                     Button {
-                        updateStatus("Repair In Progress", progressValue: 0.7)
+                        updateStatus("Repair In Progress")
                     } label: {
                         Label("Start Repair", systemImage: "wrench.and.screwdriver")
                             .frame(maxWidth: .infinity)
@@ -103,7 +89,7 @@ struct StaffServiceDetailView: View {
                     .buttonStyle(.borderedProminent)
 
                     Button {
-                        updateStatus("Completed", progressValue: 1.0)
+                        updateStatus("Completed")
                     } label: {
                         Label("Complete Service", systemImage: "checkmark.circle.fill")
                             .frame(maxWidth: .infinity)
@@ -120,7 +106,7 @@ struct StaffServiceDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    func updateStatus(_ status: String, progressValue: Double) {
+    func updateStatus(_ status: String) {
         guard let bookingId = booking.id else {
             bookingService.errorMessage = "Booking ID not found."
             return
@@ -132,13 +118,42 @@ struct StaffServiceDetailView: View {
         ) { success in
             if success {
                 currentStatus = status
-                progress = progressValue
+                progress = StaffServiceDetailView.progressValue(for: status)
                 showSuccessMessage = true
             }
         }
     }
-}
 
+    static func progressValue(for status: String) -> Double {
+        switch status.lowercased() {
+        case "pending":
+            return 0.1
+        case "inspection started":
+            return 0.3
+        case "repair in progress":
+            return 0.7
+        case "completed":
+            return 1.0
+        default:
+            return 0.1
+        }
+    }
+
+    func statusColor(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "pending":
+            return .orange
+        case "inspection started":
+            return .blue
+        case "repair in progress":
+            return .purple
+        case "completed":
+            return .green
+        default:
+            return .gray
+        }
+    }
+}
 
 #Preview {
     StaffServiceDetailView(

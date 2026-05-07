@@ -22,7 +22,7 @@ struct CustomerActivityView: View {
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("Track your booking status and vehicle service progress.")
+                    Text("Track your booking status and vehicle service progress in real time.")
                         .font(.subheadline)
                         .foregroundColor(.gray)
 
@@ -51,7 +51,6 @@ struct CustomerActivityView: View {
                         }
                     }
 
-                    
                     Text("End of history")
                         .font(.caption)
                         .foregroundColor(.gray)

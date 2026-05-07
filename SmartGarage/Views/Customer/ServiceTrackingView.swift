@@ -12,7 +12,6 @@ struct ServiceTrackingView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.blue)
 
-                
                 Text(booking.vehicleName)
                     .font(.title2)
                     .fontWeight(.bold)
