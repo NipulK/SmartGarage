@@ -147,6 +147,7 @@ struct CustomerHomeView: View {
                     Text(vehicleService.errorMessage)
                         .foregroundColor(.red)
                         .font(.caption)
+                    
                 }
                 
                 Text("Recent Updates")
