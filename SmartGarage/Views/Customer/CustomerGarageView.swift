@@ -62,6 +62,15 @@ struct CustomerGarageView: View {
                             color: .green
                         )
                     }
+                    
+                    NavigationLink(destination: GarageMapView()) {
+                        GarageOptionCard(
+                            icon: "map.fill",
+                            title: "Garage Location",
+                            subtitle: "View garage location and open route in Apple Maps",
+                            color: .purple
+                        )
+                    }
 
                     HStack {
                         Text("Registered Vehicles")
