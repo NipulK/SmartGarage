@@ -14,6 +14,7 @@ struct AppNotification: Identifiable, Codable {
     var body: String
 
     var isRead: Bool
+    var isPopupShown: Bool
 
     var createdAt: Date
 }

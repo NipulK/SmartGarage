@@ -7,6 +7,7 @@ struct CustomerHomeView: View {
 
     @State private var selectedBooking: Booking?
     @State private var showChat = false
+    @State private var activePopup: AppNotification?
 
     var body: some View {
         NavigationStack {
@@ -184,13 +185,12 @@ struct CustomerHomeView: View {
                 }
                 .background(Color(.systemGroupedBackground))
 
-                if let notification = notificationService.latestUnreadNotification {
-                    NotificationPopupView(notification: notification)
+                if let activePopup {
+                    NotificationPopupView(notification: activePopup)
                         .padding(.top, 10)
+                        .transition(.move(edge: .top))
                         .onTapGesture {
-                            if let notificationId = notification.id {
-                                notificationService.markAsRead(notificationId: notificationId)
-                            }
+                            openChatFromPopup(activePopup)
                         }
                 }
             }
@@ -205,6 +205,50 @@ struct CustomerHomeView: View {
             .onAppear {
                 vehicleService.fetchVehicles()
                 notificationService.fetchNotifications(userRole: "customer")
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    showLatestPopupIfNeeded()
+                }
+            }
+            .onChange(of: notificationService.notifications.count) {
+                showLatestPopupIfNeeded()
+            }
+        }
+    }
+
+    func showLatestPopupIfNeeded() {
+        guard activePopup == nil else { return }
+
+        if let notification = notificationService.latestUnreadNotification {
+            activePopup = notification
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                if activePopup?.id == notification.id {
+                    activePopup = nil
+
+                    if let id = notification.id {
+                        notificationService.markPopupShown(notificationId: id)
+                    }
+                }
+            }
+        }
+    }
+
+    func openChatFromPopup(_ notification: AppNotification) {
+        activePopup = nil
+
+        if let id = notification.id {
+            notificationService.markAsRead(notificationId: id)
+            notificationService.markPopupShown(notificationId: id)
+        }
+
+        BookingService().fetchBookingById(bookingId: notification.bookingId) { booking in
+            if let booking {
+                selectedBooking = booking
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    showChat = true
+                }
             }
         }
     }

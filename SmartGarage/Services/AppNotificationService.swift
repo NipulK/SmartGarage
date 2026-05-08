@@ -21,6 +21,7 @@ class AppNotificationService: ObservableObject {
         title: String,
         body: String
     ) {
+
         let notification = AppNotification(
             receiverId: receiverId,
             senderName: senderName,
@@ -28,14 +29,28 @@ class AppNotificationService: ObservableObject {
             title: title,
             body: body,
             isRead: false,
+            isPopupShown: false,
             createdAt: Date()
         )
 
         do {
-            _ = try db.collection("notifications").addDocument(from: notification)
+
+            _ = try db.collection("notifications")
+                .addDocument(from: notification)
+
         } catch {
+
             print(error.localizedDescription)
         }
+    }
+    
+    func markPopupShown(notificationId: String) {
+
+        db.collection("notifications")
+            .document(notificationId)
+            .updateData([
+                "isPopupShown": true
+            ])
     }
 
     func fetchNotifications(userRole: String) {
@@ -75,6 +90,11 @@ class AppNotificationService: ObservableObject {
     }
 
     var latestUnreadNotification: AppNotification? {
-        notifications.first { !$0.isRead }
+
+        notifications.first {
+
+            !$0.isRead &&
+            !$0.isPopupShown
+        }
     }
 }
