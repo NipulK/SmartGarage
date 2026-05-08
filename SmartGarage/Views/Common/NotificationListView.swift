@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct NotificationListView: View {
-
+    let userRole: String
+    
     @StateObject private var notificationService =
     AppNotificationService()
 
@@ -50,7 +51,7 @@ struct NotificationListView: View {
         .navigationTitle("Notifications")
         .onAppear {
 
-            notificationService.fetchNotifications(userRole: "customer")
+            notificationService.fetchNotifications(userRole: userRole)
         }
     }
 }

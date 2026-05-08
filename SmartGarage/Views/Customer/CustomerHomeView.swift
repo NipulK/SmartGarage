@@ -24,7 +24,7 @@ struct CustomerHomeView: View {
                             Spacer()
 
                             NavigationLink {
-                                NotificationListView()
+                                NotificationListView(userRole: "customer")
                             } label: {
                                 ZStack(alignment: .topTrailing) {
                                     Image(systemName: "bell")

@@ -1,18 +1,38 @@
 import SwiftUI
 
-
 struct StaffDashboardView: View {
+    
+    @StateObject private var notificationService = AppNotificationService()
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
 
                 HStack {
                     Image(systemName: "line.3.horizontal")
+                    
                     Text("SmartGarage Staff")
                         .fontWeight(.bold)
                         .foregroundColor(.blue)
+                    
                     Spacer()
-                    Image(systemName: "bell")
+                    
+                    NavigationLink {
+                        NotificationListView(userRole: "staff")
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "bell")
+                                .font(.title3)
+                                .foregroundColor(.black)
+
+                            if notificationService.unreadCount > 0 {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 12, height: 12)
+                            }
+                        }
+                    }
+                    
                     Image(systemName: "person.circle.fill")
                         .font(.title2)
                 }
@@ -27,11 +47,40 @@ struct StaffDashboardView: View {
                         .font(.subheadline)
                 }
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
-                    StaffStatCard(title: "Bookings", value: "24", icon: "calendar", color: .blue)
-                    StaffStatCard(title: "Active", value: "08", icon: "wrench.fill", color: .orange)
-                    StaffStatCard(title: "Completed", value: "16", icon: "checkmark.seal.fill", color: .green)
-                    StaffStatCard(title: "Revenue", value: "$8.4K", icon: "dollarsign.circle.fill", color: .purple)
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ],
+                    spacing: 14
+                ) {
+                    StaffStatCard(
+                        title: "Bookings",
+                        value: "24",
+                        icon: "calendar",
+                        color: .blue
+                    )
+                    
+                    StaffStatCard(
+                        title: "Active",
+                        value: "08",
+                        icon: "wrench.fill",
+                        color: .orange
+                    )
+                    
+                    StaffStatCard(
+                        title: "Completed",
+                        value: "16",
+                        icon: "checkmark.seal.fill",
+                        color: .green
+                    )
+                    
+                    StaffStatCard(
+                        title: "Revenue",
+                        value: "$8.4K",
+                        icon: "dollarsign.circle.fill",
+                        color: .purple
+                    )
                 }
 
                 Text("Today’s Bookings")
@@ -67,6 +116,9 @@ struct StaffDashboardView: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            notificationService.fetchNotifications(userRole: "staff")
+        }
     }
 }
 
