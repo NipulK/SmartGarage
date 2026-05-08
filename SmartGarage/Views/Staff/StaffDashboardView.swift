@@ -78,33 +78,53 @@ struct StaffDashboardView: View {
                         ],
                         spacing: 14
                     ) {
-                        StaffStatCard(
-                            title: "Bookings",
-                            value: "\(totalBookings)",
-                            icon: "calendar",
-                            color: .blue
-                        )
-                        
-                        StaffStatCard(
-                            title: "Active",
-                            value: "\(activeBookings)",
-                            icon: "wrench.fill",
-                            color: .orange
-                        )
-                        
-                        StaffStatCard(
-                            title: "Completed",
-                            value: "\(completedBookings)",
-                            icon: "checkmark.seal.fill",
-                            color: .green
-                        )
-                        
-                        StaffStatCard(
-                            title: "Pending",
-                            value: "\(pendingCount())",
-                            icon: "clock.fill",
-                            color: .purple
-                        )
+                        NavigationLink {
+                            StaffBookingView(initialTab: "All")
+                        } label: {
+                            StaffStatCard(
+                                title: "Bookings",
+                                value: "\(totalBookings)",
+                                icon: "calendar",
+                                color: .blue
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        NavigationLink {
+                            StaffBookingView(initialTab: "Active")
+                        } label: {
+                            StaffStatCard(
+                                title: "Active",
+                                value: "\(activeBookings)",
+                                icon: "wrench.fill",
+                                color: .orange
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        NavigationLink {
+                            StaffBookingView(initialTab: "Completed")
+                        } label: {
+                            StaffStatCard(
+                                title: "Completed",
+                                value: "\(completedBookings)",
+                                icon: "checkmark.seal.fill",
+                                color: .green
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        NavigationLink {
+                            StaffBookingView(initialTab: "Pending")
+                        } label: {
+                            StaffStatCard(
+                                title: "Pending",
+                                value: "\(pendingCount())",
+                                icon: "clock.fill",
+                                color: .purple
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
 
                     HStack {

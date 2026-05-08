@@ -1,23 +1,36 @@
 import SwiftUI
 
-
 struct StaffBookingView: View {
-    @StateObject private var bookingService = BookingService()
-    @State private var selectedTab = "Today"
+    let initialTab: String
 
-    let tabs = ["Today", "Upcoming", "In Progress"]
+    @StateObject private var bookingService = BookingService()
+    @State private var selectedTab: String
+
+    let tabs = ["All", "Pending", "Active", "Completed"]
+
+    init(initialTab: String = "All") {
+        self.initialTab = initialTab
+        _selectedTab = State(initialValue: initialTab)
+    }
 
     var filteredBookings: [Booking] {
         switch selectedTab {
-        case "Upcoming":
+        case "Pending":
             return bookingService.bookings.filter {
                 $0.status.lowercased() == "pending"
             }
-        case "In Progress":
+
+        case "Active":
             return bookingService.bookings.filter {
                 $0.status.lowercased() == "inspection started" ||
                 $0.status.lowercased() == "repair in progress"
             }
+
+        case "Completed":
+            return bookingService.bookings.filter {
+                $0.status.lowercased() == "completed"
+            }
+
         default:
             return bookingService.bookings
         }
@@ -28,11 +41,11 @@ struct StaffBookingView: View {
             VStack {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Bookings")
+                        Text("\(selectedTab) Bookings")
                             .font(.title)
                             .fontWeight(.bold)
 
-                        Text("Manage all customer service bookings")
+                        Text("Manage customer service bookings")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
@@ -82,7 +95,7 @@ struct StaffBookingView: View {
                     Spacer()
                 } else if filteredBookings.isEmpty {
                     Spacer()
-                    Text("No bookings found")
+                    Text("No \(selectedTab.lowercased()) bookings found")
                         .foregroundColor(.gray)
                     Spacer()
                 } else {
@@ -102,6 +115,7 @@ struct StaffBookingView: View {
                                         color: statusColor(booking.status)
                                     )
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
                         .padding()
@@ -110,6 +124,7 @@ struct StaffBookingView: View {
             }
             .background(Color(.systemGroupedBackground))
             .onAppear {
+                selectedTab = initialTab
                 bookingService.fetchAllBookings()
             }
         }
@@ -191,5 +206,5 @@ struct StaffTaskCard: View {
 }
 
 #Preview {
-    StaffBookingView()
+    StaffBookingView(initialTab: "All")
 }
