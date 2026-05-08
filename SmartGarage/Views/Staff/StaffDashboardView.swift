@@ -1,124 +1,194 @@
 import SwiftUI
 
-
 struct StaffDashboardView: View {
     
     @StateObject private var notificationService = AppNotificationService()
+    @StateObject private var bookingService = BookingService()
+    
+    var totalBookings: Int {
+        bookingService.bookings.count
+    }
+    
+    var activeBookings: Int {
+        bookingService.bookings.filter {
+            $0.status.lowercased() == "pending" ||
+            $0.status.lowercased() == "inspection started" ||
+            $0.status.lowercased() == "repair in progress"
+        }.count
+    }
+    
+    var completedBookings: Int {
+        bookingService.bookings.filter {
+            $0.status.lowercased() == "completed"
+        }.count
+    }
+    
+    var latestBookings: [Booking] {
+        Array(bookingService.bookings.prefix(5))
+    }
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
 
-                HStack {
-                    Image(systemName: "line.3.horizontal")
-                    
-                    Text("SmartGarage Staff")
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                    
-                    Spacer()
-                    
-                    NavigationLink {
-                        NotificationListView(userRole: "staff")
-                    } label: {
-                        ZStack(alignment: .topTrailing) {
-                            Image(systemName: "bell")
-                                .font(.title3)
-                                .foregroundColor(.black)
+                    HStack {
+                        Image(systemName: "line.3.horizontal")
+                        
+                        Text("SmartGarage Staff")
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                        
+                        Spacer()
+                        
+                        NavigationLink {
+                            NotificationListView(userRole: "staff")
+                        } label: {
+                            ZStack(alignment: .topTrailing) {
+                                Image(systemName: "bell")
+                                    .font(.title3)
+                                    .foregroundColor(.black)
 
-                            if notificationService.unreadCount > 0 {
-                                Circle()
-                                    .fill(Color.red)
-                                    .frame(width: 12, height: 12)
+                                if notificationService.unreadCount > 0 {
+                                    Circle()
+                                        .fill(Color.red)
+                                        .frame(width: 12, height: 12)
+                                }
+                            }
+                        }
+                        
+                        Image(systemName: "person.circle.fill")
+                            .font(.title2)
+                    }
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Good Morning, Marcus")
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        Text("Here is your live garage operation overview for today.")
+                            .foregroundColor(.gray)
+                            .font(.subheadline)
+                    }
+
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ],
+                        spacing: 14
+                    ) {
+                        StaffStatCard(
+                            title: "Bookings",
+                            value: "\(totalBookings)",
+                            icon: "calendar",
+                            color: .blue
+                        )
+                        
+                        StaffStatCard(
+                            title: "Active",
+                            value: "\(activeBookings)",
+                            icon: "wrench.fill",
+                            color: .orange
+                        )
+                        
+                        StaffStatCard(
+                            title: "Completed",
+                            value: "\(completedBookings)",
+                            icon: "checkmark.seal.fill",
+                            color: .green
+                        )
+                        
+                        StaffStatCard(
+                            title: "Pending",
+                            value: "\(pendingCount())",
+                            icon: "clock.fill",
+                            color: .purple
+                        )
+                    }
+
+                    HStack {
+                        Text("Latest Bookings")
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        Button {
+                            bookingService.fetchAllBookings()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundColor(.blue)
+                        }
+                    }
+
+                    if bookingService.isLoading {
+                        ProgressView("Loading bookings...")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    } else if !bookingService.errorMessage.isEmpty {
+                        Text(bookingService.errorMessage)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white)
+                            .cornerRadius(14)
+                    } else if latestBookings.isEmpty {
+                        Text("No bookings available.")
+                            .foregroundColor(.gray)
+                            .font(.caption)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white)
+                            .cornerRadius(14)
+                    } else {
+                        VStack(spacing: 14) {
+                            ForEach(latestBookings) { booking in
+                                NavigationLink {
+                                    StaffServiceDetailView(booking: booking)
+                                } label: {
+                                    StaffDashboardBookingRow(
+                                        customer: "Customer ID: \(booking.userId.prefix(6))",
+                                        vehicle: booking.vehicleName,
+                                        service: booking.serviceType,
+                                        time: booking.timeSlot,
+                                        status: booking.status,
+                                        color: statusColor(booking.status)
+                                    )
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
-                    
-                    Image(systemName: "person.circle.fill")
-                        .font(.title2)
                 }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Good Morning, Marcus")
-                        .font(.title2)
-                        .fontWeight(.bold)
-
-                    Text("Here is your garage operation overview for today.")
-                        .foregroundColor(.gray)
-                        .font(.subheadline)
-                }
-
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible()),
-                        GridItem(.flexible())
-                    ],
-                    spacing: 14
-                ) {
-                    StaffStatCard(
-                        title: "Bookings",
-                        value: "24",
-                        icon: "calendar",
-                        color: .blue
-                    )
-                    
-                    StaffStatCard(
-                        title: "Active",
-                        value: "08",
-                        icon: "wrench.fill",
-                        color: .orange
-                    )
-                    
-                    StaffStatCard(
-                        title: "Completed",
-                        value: "16",
-                        icon: "checkmark.seal.fill",
-                        color: .green
-                    )
-                    
-                    StaffStatCard(
-                        title: "Revenue",
-                        value: "$8.4K",
-                        icon: "dollarsign.circle.fill",
-                        color: .purple
-                    )
-                }
-
-                Text("Today’s Bookings")
-                    .font(.headline)
-
-                StaffBookingRow(
-                    customer: "Alex Rivera",
-                    vehicle: "Porsche 911 Carrera S",
-                    service: "Full Service",
-                    time: "10:30 AM",
-                    status: "CHECK-IN",
-                    color: .blue
-                )
-
-                StaffBookingRow(
-                    customer: "Sophia Chen",
-                    vehicle: "Tesla Model 3",
-                    service: "Battery Check",
-                    time: "12:00 PM",
-                    status: "PENDING",
-                    color: .orange
-                )
-
-                StaffBookingRow(
-                    customer: "David Miller",
-                    vehicle: "BMW M4",
-                    service: "Brake Repair",
-                    time: "02:30 PM",
-                    status: "IN PROGRESS",
-                    color: .green
-                )
+                .padding()
             }
-            .padding()
+            .background(Color(.systemGroupedBackground))
+            .onAppear {
+                notificationService.fetchNotifications(userRole: "staff")
+                bookingService.fetchAllBookings()
+            }
         }
-        .background(Color(.systemGroupedBackground))
-        .onAppear {
-            notificationService.fetchNotifications(userRole: "staff")
+    }
+    
+    func pendingCount() -> Int {
+        bookingService.bookings.filter {
+            $0.status.lowercased() == "pending"
+        }.count
+    }
+    
+    func statusColor(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "pending":
+            return .orange
+        case "inspection started":
+            return .blue
+        case "repair in progress":
+            return .purple
+        case "completed":
+            return .green
+        default:
+            return .gray
         }
     }
 }
@@ -150,7 +220,7 @@ struct StaffStatCard: View {
     }
 }
 
-struct StaffBookingRow: View {
+struct StaffDashboardBookingRow: View {
     let customer: String
     let vehicle: String
     let service: String
@@ -169,6 +239,7 @@ struct StaffBookingRow: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(customer)
                     .font(.headline)
+                    .foregroundColor(.black)
 
                 Text(vehicle)
                     .font(.caption)
@@ -185,8 +256,9 @@ struct StaffBookingRow: View {
                 Text(time)
                     .font(.caption)
                     .fontWeight(.bold)
+                    .foregroundColor(.black)
 
-                Text(status)
+                Text(status.uppercased())
                     .font(.caption2)
                     .fontWeight(.bold)
                     .foregroundColor(color)
