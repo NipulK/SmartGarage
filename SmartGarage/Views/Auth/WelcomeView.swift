@@ -65,5 +65,7 @@ struct WelcomeView: View {
                 }
             }
         }
+        
     }
 }
+

@@ -13,6 +13,7 @@ struct RegisterView: View {
         VStack(spacing: 18) {
             Spacer()
 
+            
             Text("Create Customer Account")
                 .font(.title)
                 .fontWeight(.bold)
