@@ -12,6 +12,8 @@ struct CustomerBookingView: View {
     @State private var selectedTime = "02:00 PM"
     @State private var showSuccessMessage = false
     @State private var calendarMessage = ""
+    
+    @State private var selectedDate = Date()
 
     let services = [
         "Full System Diagnostic",
@@ -111,19 +113,13 @@ struct CustomerBookingView: View {
                         .foregroundColor(.gray)
 
                     VStack(spacing: 15) {
-                        Text("May 2026")
-                            .font(.headline)
-
-                        HStack {
-                            ForEach(["6", "7", "8", "9", "10", "11", "12"], id: \.self) { day in
-                                Text(day)
-                                    .font(.caption)
-                                    .frame(width: 32, height: 32)
-                                    .background(day == "8" ? Color.blue : Color.clear)
-                                    .foregroundColor(day == "8" ? .white : .black)
-                                    .clipShape(Circle())
-                            }
-                        }
+                        DatePicker(
+                            "Select Date",
+                            selection: $selectedDate,
+                            in: Date()...,
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.graphical)
 
                         LazyVGrid(
                             columns: [
@@ -227,9 +223,15 @@ struct CustomerBookingView: View {
             bookingService.errorMessage = "Please select a vehicle."
             return
         }
+        
+        func formatDate(_ date: Date) -> String {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            return formatter.string(from: date)
+        }
 
-        let bookingDate = "2026-05-08"
-
+        let bookingDate = formatDate(selectedDate)
+        
         bookingService.createBooking(
             vehicleId: vehicle.id ?? "",
             vehicleName: "\(vehicle.make) \(vehicle.model)",
