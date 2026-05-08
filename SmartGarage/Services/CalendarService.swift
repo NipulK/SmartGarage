@@ -12,25 +12,61 @@ class CalendarService {
         endDate: Date,
         completion: @escaping (Bool, String) -> Void
     ) {
-        eventStore.requestAccess(to: .event) { granted, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    completion(false, error.localizedDescription)
-                    return
-                }
-
-                if granted {
-                    self.addEvent(
+        if #available(iOS 17.0, *) {
+            eventStore.requestFullAccessToEvents { granted, error in
+                DispatchQueue.main.async {
+                    self.handleCalendarPermission(
+                        granted: granted,
+                        error: error,
                         title: title,
                         notes: notes,
                         startDate: startDate,
                         endDate: endDate,
                         completion: completion
                     )
-                } else {
-                    completion(false, "Calendar permission denied.")
                 }
             }
+        } else {
+            eventStore.requestAccess(to: .event) { granted, error in
+                DispatchQueue.main.async {
+                    self.handleCalendarPermission(
+                        granted: granted,
+                        error: error,
+                        title: title,
+                        notes: notes,
+                        startDate: startDate,
+                        endDate: endDate,
+                        completion: completion
+                    )
+                }
+            }
+        }
+    }
+
+    private func handleCalendarPermission(
+        granted: Bool,
+        error: Error?,
+        title: String,
+        notes: String,
+        startDate: Date,
+        endDate: Date,
+        completion: @escaping (Bool, String) -> Void
+    ) {
+        if let error = error {
+            completion(false, error.localizedDescription)
+            return
+        }
+
+        if granted {
+            addEvent(
+                title: title,
+                notes: notes,
+                startDate: startDate,
+                endDate: endDate,
+                completion: completion
+            )
+        } else {
+            completion(false, "Calendar permission denied. Please allow Calendar access in Settings.")
         }
     }
 
