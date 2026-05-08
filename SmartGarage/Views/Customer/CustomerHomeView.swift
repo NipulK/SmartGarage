@@ -293,6 +293,7 @@ struct CustomerHomeView: View {
             }
         }
     }
+    
 
     func openChatFromPopup(_ notification: AppNotification) {
         activePopup = nil
