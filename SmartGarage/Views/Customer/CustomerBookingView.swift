@@ -4,7 +4,8 @@ struct CustomerBookingView: View {
     
     @StateObject private var bookingService = BookingService()
     @StateObject private var vehicleService = VehicleService()
-    @StateObject private var calendarService = CalendarService()
+
+    private var calendarService = CalendarService()
     
     @State private var selectedVehicle = ""
     @State private var selectedService = "Full System Diagnostic"
