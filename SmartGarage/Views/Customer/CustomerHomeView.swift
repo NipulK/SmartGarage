@@ -3,11 +3,18 @@ import SwiftUI
 struct CustomerHomeView: View {
 
     @StateObject private var vehicleService = VehicleService()
+    @StateObject private var bookingService = BookingService()
     @StateObject private var notificationService = AppNotificationService()
 
     @State private var selectedBooking: Booking?
     @State private var showChat = false
     @State private var activePopup: AppNotification?
+
+    var latestActiveBooking: Booking? {
+        bookingService.bookings.first {
+            $0.status.lowercased() != "completed"
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -40,76 +47,116 @@ struct CustomerHomeView: View {
                                 }
                             }
 
-                            Image(systemName: "person.circle.fill")
-                                .font(.title2)
+                            NavigationLink {
+                                CustomerProfileView()
+                            } label: {
+                                Image(systemName: "person.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.black)
+                            }
                         }
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Hello, Alex Rivera")
+                            Text("Hello, Customer")
                                 .font(.title2)
                                 .fontWeight(.bold)
 
-                            Text("Your vehicle is in good hands today.")
+                            Text("Track your vehicle services and garage updates in real time.")
                                 .foregroundColor(.gray)
                         }
 
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text("VEHICLE IN SERVICE")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundColor(.orange)
+                        if let activeBooking = latestActiveBooking {
+                            VStack(alignment: .leading, spacing: 14) {
+                                Text("VEHICLE IN SERVICE")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(statusColor(activeBooking.status))
 
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text("Porsche 911 Carrera S")
-                                        .font(.headline)
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(activeBooking.vehicleName)
+                                            .font(.headline)
 
-                                    Text("Service ID: #SG-992-042")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
+                                        Text("Booking ID: \(activeBooking.id?.prefix(8) ?? "N/A")")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+
+                                    Spacer()
+
+                                    VStack {
+                                        Text("TIME")
+                                            .font(.caption2)
+                                            .foregroundColor(.gray)
+
+                                        Text(activeBooking.timeSlot)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.blue)
+                                    }
                                 }
 
-                                Spacer()
+                                Text(activeBooking.status.uppercased())
+                                    .font(.caption)
+                                    .fontWeight(.bold)
 
-                                VStack {
-                                    Text("EST.")
-                                        .font(.caption2)
-                                        .foregroundColor(.gray)
+                                ProgressView(value: progressValue(for: activeBooking.status))
 
-                                    Text("14:30 PM")
-                                        .fontWeight(.bold)
+                                HStack {
+                                    InfoBox(
+                                        icon: "slider.horizontal.3",
+                                        title: "TYPE",
+                                        value: activeBooking.serviceType
+                                    )
+
+                                    InfoBox(
+                                        icon: "calendar",
+                                        title: "DATE",
+                                        value: activeBooking.bookingDate
+                                    )
+                                }
+
+                                Button {
+                                    selectedBooking = activeBooking
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        showChat = true
+                                    }
+                                } label: {
+                                    Label("Message Garage", systemImage: "message.fill")
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color.blue.opacity(0.1))
                                         .foregroundColor(.blue)
+                                        .cornerRadius(12)
                                 }
                             }
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(22)
+                            .shadow(color: .gray.opacity(0.15), radius: 8)
+                        } else {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("NO ACTIVE SERVICE")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.gray)
 
-                            Text("DIAGNOSTIC PHASE")
-                                .font(.caption)
-                                .fontWeight(.bold)
+                                Text("You do not have any active vehicle service right now.")
+                                    .font(.headline)
 
-                            ProgressView(value: 0.65)
-
-                            HStack {
-                                InfoBox(
-                                    icon: "slider.horizontal.3",
-                                    title: "TYPE",
-                                    value: "Full Service"
-                                )
-
-                                InfoBox(
-                                    icon: "gearshape",
-                                    title: "EXPERT",
-                                    value: "Marc L."
-                                )
+                                Text("Create a booking to start tracking your service progress.")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
                             }
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white)
+                            .cornerRadius(22)
+                            .shadow(color: .gray.opacity(0.15), radius: 8)
                         }
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(22)
-                        .shadow(color: .gray.opacity(0.15), radius: 8)
 
                         HStack {
-                            Button {
-
+                            NavigationLink {
+                                CustomerBookingView()
                             } label: {
                                 Label("Book Service", systemImage: "calendar.badge.plus")
                                     .frame(maxWidth: .infinity)
@@ -119,8 +166,8 @@ struct CustomerHomeView: View {
                                     .cornerRadius(12)
                             }
 
-                            Button {
-
+                            NavigationLink {
+                                CustomerActivityView()
                             } label: {
                                 Label("View History", systemImage: "clock.arrow.circlepath")
                                     .frame(maxWidth: .infinity)
@@ -171,15 +218,27 @@ struct CustomerHomeView: View {
                         Text("Recent Updates")
                             .font(.headline)
 
-                        UpdateRow(
-                            title: "Oil Filter Replaced",
-                            time: "Today, 10:45 AM"
-                        )
-
-                        UpdateRow(
-                            title: "Brake Fluid Check",
-                            time: "Today, 09:12 AM"
-                        )
+                        if bookingService.bookings.isEmpty {
+                            Text("No recent service updates yet.")
+                                .foregroundColor(.gray)
+                                .font(.caption)
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color.white)
+                                .cornerRadius(14)
+                        } else {
+                            ForEach(bookingService.bookings.prefix(3)) { booking in
+                                NavigationLink {
+                                    ServiceTrackingView(booking: booking)
+                                } label: {
+                                    UpdateRow(
+                                        title: "\(booking.serviceType) - \(booking.status)",
+                                        time: "\(booking.vehicleName) • \(booking.timeSlot)"
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                     .padding()
                 }
@@ -204,6 +263,7 @@ struct CustomerHomeView: View {
             }
             .onAppear {
                 vehicleService.fetchVehicles()
+                bookingService.fetchBookings()
                 notificationService.fetchNotifications(userRole: "customer")
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
@@ -250,6 +310,36 @@ struct CustomerHomeView: View {
                     showChat = true
                 }
             }
+        }
+    }
+
+    func progressValue(for status: String) -> Double {
+        switch status.lowercased() {
+        case "pending":
+            return 0.1
+        case "inspection started":
+            return 0.3
+        case "repair in progress":
+            return 0.7
+        case "completed":
+            return 1.0
+        default:
+            return 0.1
+        }
+    }
+
+    func statusColor(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "pending":
+            return .orange
+        case "inspection started":
+            return .blue
+        case "repair in progress":
+            return .purple
+        case "completed":
+            return .green
+        default:
+            return .gray
         }
     }
 }
