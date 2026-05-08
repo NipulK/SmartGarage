@@ -86,6 +86,7 @@ struct ChatView: View {
             return
         }
 
+        
         chatService.sendMessage(
             booking: booking,
             senderName: senderName,

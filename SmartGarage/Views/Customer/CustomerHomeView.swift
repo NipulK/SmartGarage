@@ -360,6 +360,7 @@ struct CustomerHomeView: View {
     }
 }
 
+
 struct VehicleDetailsPopup: View {
     let vehicle: Vehicle
 
