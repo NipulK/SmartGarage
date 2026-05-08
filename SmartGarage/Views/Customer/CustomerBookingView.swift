@@ -27,6 +27,7 @@ struct CustomerBookingView: View {
                         .font(.title2)
                 }
 
+                
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Book Service")
                         .font(.title2)
