@@ -1,5 +1,6 @@
 import SwiftUI
 
+
 struct CustomerGarageView: View {
     var body: some View {
         NavigationStack {

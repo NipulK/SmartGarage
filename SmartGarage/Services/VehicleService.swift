@@ -3,6 +3,7 @@ import FirebaseAuth
 import FirebaseFirestore
 import Combine
 
+
 class VehicleService: ObservableObject {
     @Published var vehicles: [Vehicle] = []
     @Published var errorMessage = ""
