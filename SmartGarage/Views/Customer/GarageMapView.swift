@@ -4,8 +4,8 @@ import MapKit
 struct GarageMapView: View {
 
     private let garageCoordinate = CLLocationCoordinate2D(
-        latitude: 7.2083,
-        longitude: 79.8358
+        latitude: 6.98190,
+        longitude: 80.09970
     )
 
     @State private var cameraPosition: MapCameraPosition = .region(

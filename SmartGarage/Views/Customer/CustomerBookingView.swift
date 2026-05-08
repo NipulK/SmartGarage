@@ -4,14 +4,27 @@ struct CustomerBookingView: View {
     
     @StateObject private var bookingService = BookingService()
     @StateObject private var vehicleService = VehicleService()
+    @StateObject private var calendarService = CalendarService()
     
     @State private var selectedVehicle = ""
     @State private var selectedService = "Full System Diagnostic"
     @State private var selectedTime = "02:00 PM"
     @State private var showSuccessMessage = false
+    @State private var calendarMessage = ""
 
-    let services = ["Full System Diagnostic", "Oil Change & Brake Check", "Tire Rotation", "Battery Check"]
-    let times = ["09:00 AM", "11:30 AM", "02:00 PM", "04:30 PM"]
+    let services = [
+        "Full System Diagnostic",
+        "Oil Change & Brake Check",
+        "Tire Rotation",
+        "Battery Check"
+    ]
+
+    let times = [
+        "09:00 AM",
+        "11:30 AM",
+        "02:00 PM",
+        "04:30 PM"
+    ]
 
     var body: some View {
         ScrollView {
@@ -27,7 +40,6 @@ struct CustomerBookingView: View {
                         .font(.title2)
                 }
 
-                
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Book Service")
                         .font(.title2)
@@ -98,21 +110,27 @@ struct CustomerBookingView: View {
                         .foregroundColor(.gray)
 
                     VStack(spacing: 15) {
-                        Text("September 2024")
+                        Text("May 2026")
                             .font(.headline)
 
                         HStack {
-                            ForEach(["26", "27", "28", "29", "30", "1", "2"], id: \.self) { day in
+                            ForEach(["6", "7", "8", "9", "10", "11", "12"], id: \.self) { day in
                                 Text(day)
                                     .font(.caption)
                                     .frame(width: 32, height: 32)
-                                    .background(day == "30" ? Color.blue : Color.clear)
-                                    .foregroundColor(day == "30" ? .white : .black)
+                                    .background(day == "8" ? Color.blue : Color.clear)
+                                    .foregroundColor(day == "8" ? .white : .black)
                                     .clipShape(Circle())
                             }
                         }
 
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ],
+                            spacing: 12
+                        ) {
                             ForEach(times, id: \.self) { time in
                                 Button {
                                     selectedTime = time
@@ -165,6 +183,12 @@ struct CustomerBookingView: View {
                         .font(.caption)
                 }
 
+                if !calendarMessage.isEmpty {
+                    Text(calendarMessage)
+                        .foregroundColor(calendarMessage.contains("successfully") ? .green : .red)
+                        .font(.caption)
+                }
+
                 Button {
                     confirmBooking()
                 } label: {
@@ -188,7 +212,8 @@ struct CustomerBookingView: View {
             vehicleService.fetchVehicles()
         }
         .onChange(of: vehicleService.vehicles.count) {
-            if selectedVehicle.isEmpty, let firstVehicle = vehicleService.vehicles.first {
+            if selectedVehicle.isEmpty,
+               let firstVehicle = vehicleService.vehicles.first {
                 selectedVehicle = firstVehicle.id ?? ""
             }
         }
@@ -202,18 +227,68 @@ struct CustomerBookingView: View {
             return
         }
 
+        let bookingDate = "2026-05-08"
+
         bookingService.createBooking(
             vehicleId: vehicle.id ?? "",
             vehicleName: "\(vehicle.make) \(vehicle.model)",
             serviceType: selectedService,
-            bookingDate: "2025-05-06",
+            bookingDate: bookingDate,
             timeSlot: selectedTime
         ) { success in
             if success {
                 showSuccessMessage = true
-                print("Booking saved")
+                addBookingToCalendar(
+                    vehicleName: "\(vehicle.make) \(vehicle.model)",
+                    serviceType: selectedService,
+                    bookingDate: bookingDate,
+                    timeSlot: selectedTime
+                )
             }
         }
+    }
+
+    func addBookingToCalendar(
+        vehicleName: String,
+        serviceType: String,
+        bookingDate: String,
+        timeSlot: String
+    ) {
+        guard let startDate = createDate(
+            dateString: bookingDate,
+            timeString: timeSlot
+        ) else {
+            calendarMessage = "Could not create calendar date."
+            return
+        }
+
+        let endDate = Calendar.current.date(
+            byAdding: .hour,
+            value: 2,
+            to: startDate
+        ) ?? startDate.addingTimeInterval(7200)
+
+        calendarService.requestAccessAndAddEvent(
+            title: "SmartGarage - \(serviceType)",
+            notes: "Vehicle: \(vehicleName)\nService: \(serviceType)",
+            startDate: startDate,
+            endDate: endDate
+        ) { success, message in
+            calendarMessage = message
+        }
+    }
+
+    func createDate(
+        dateString: String,
+        timeString: String
+    ) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd hh:mm a"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+
+        return formatter.date(
+            from: "\(dateString) \(timeString)"
+        )
     }
 }
 
