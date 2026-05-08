@@ -10,6 +10,8 @@ struct CustomerHomeView: View {
     @State private var showChat = false
     @State private var activePopup: AppNotification?
 
+    @State private var selectedVehicle: Vehicle?
+
     var latestActiveBooking: Booking? {
         bookingService.bookings.first {
             $0.status.lowercased() != "completed"
@@ -184,9 +186,13 @@ struct CustomerHomeView: View {
 
                             Spacer()
 
-                            Text("Add New")
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                            NavigationLink {
+                                AddVehicleView()
+                            } label: {
+                                Text("Add New")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
                         }
 
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -200,10 +206,15 @@ struct CustomerHomeView: View {
                                         .padding()
                                 } else {
                                     ForEach(vehicleService.vehicles) { vehicle in
-                                        VehicleCard(
-                                            name: "\(vehicle.make) \(vehicle.model)",
-                                            plate: vehicle.plate
-                                        )
+                                        Button {
+                                            selectedVehicle = vehicle
+                                        } label: {
+                                            VehicleCard(
+                                                name: "\(vehicle.make) \(vehicle.model)",
+                                                plate: vehicle.plate
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
                                     }
                                 }
                             }
@@ -261,6 +272,11 @@ struct CustomerHomeView: View {
                     )
                 }
             }
+            .sheet(item: $selectedVehicle) { vehicle in
+                VehicleDetailsPopup(vehicle: vehicle)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+            }
             .onAppear {
                 vehicleService.fetchVehicles()
                 bookingService.fetchBookings()
@@ -293,7 +309,6 @@ struct CustomerHomeView: View {
             }
         }
     }
-    
 
     func openChatFromPopup(_ notification: AppNotification) {
         activePopup = nil
@@ -345,6 +360,69 @@ struct CustomerHomeView: View {
     }
 }
 
+struct VehicleDetailsPopup: View {
+    let vehicle: Vehicle
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack {
+                    Image(systemName: "car.fill")
+                        .font(.title)
+                        .foregroundColor(.blue)
+                        .frame(width: 55, height: 55)
+                        .background(Color.blue.opacity(0.12))
+                        .cornerRadius(16)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(vehicle.make) \(vehicle.model)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+
+                        Text(vehicle.plate)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+
+                    Spacer()
+                }
+
+                Divider()
+
+                VehicleDetailLine(title: "Make", value: vehicle.make)
+                VehicleDetailLine(title: "Model", value: vehicle.model)
+                VehicleDetailLine(title: "Year", value: vehicle.year)
+                VehicleDetailLine(title: "Color", value: vehicle.color)
+                VehicleDetailLine(title: "Plate", value: vehicle.plate)
+                VehicleDetailLine(title: "VIN", value: vehicle.vin)
+            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+}
+
+struct VehicleDetailLine: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .foregroundColor(.gray)
+
+            Spacer()
+
+            Text(value.isEmpty ? "N/A" : value)
+                .fontWeight(.semibold)
+        }
+        .font(.subheadline)
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+    }
+}
+
 struct InfoBox: View {
     let icon: String
     let title: String
@@ -389,6 +467,7 @@ struct VehicleCard: View {
 
             Text(name)
                 .fontWeight(.bold)
+                .foregroundColor(.black)
 
             Text(plate)
                 .font(.caption)
@@ -413,6 +492,7 @@ struct UpdateRow: View {
             VStack(alignment: .leading) {
                 Text(title)
                     .fontWeight(.semibold)
+                    .foregroundColor(.black)
 
                 Text(time)
                     .font(.caption)
