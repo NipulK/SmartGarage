@@ -3,7 +3,6 @@ import FirebaseAuth
 import FirebaseFirestore
 import Combine
 
-
 class VehicleService: ObservableObject {
     @Published var vehicles: [Vehicle] = []
     @Published var errorMessage = ""
@@ -44,6 +43,7 @@ class VehicleService: ObservableObject {
                         self.errorMessage = error.localizedDescription
                         completion(false)
                     } else {
+                        self.fetchVehicles()
                         completion(true)
                     }
                 }
@@ -55,9 +55,13 @@ class VehicleService: ObservableObject {
     }
 
     func fetchVehicles() {
-        guard let userId = Auth.auth().currentUser?.uid else { return }
+        guard let userId = Auth.auth().currentUser?.uid else {
+            errorMessage = "User not logged in."
+            return
+        }
 
         isLoading = true
+        errorMessage = ""
 
         db.collection("vehicles")
             .whereField("userId", isEqualTo: userId)
@@ -73,6 +77,30 @@ class VehicleService: ObservableObject {
                     self.vehicles = snapshot?.documents.compactMap { document in
                         try? document.data(as: Vehicle.self)
                     } ?? []
+                }
+            }
+    }
+
+    func deleteVehicle(
+        vehicleId: String,
+        completion: @escaping (Bool) -> Void
+    ) {
+        isLoading = true
+        errorMessage = ""
+
+        db.collection("vehicles")
+            .document(vehicleId)
+            .delete { error in
+                DispatchQueue.main.async {
+                    self.isLoading = false
+
+                    if let error = error {
+                        self.errorMessage = error.localizedDescription
+                        completion(false)
+                    } else {
+                        self.vehicles.removeAll { $0.id == vehicleId }
+                        completion(true)
+                    }
                 }
             }
     }
