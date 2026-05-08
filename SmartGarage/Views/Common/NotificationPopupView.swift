@@ -20,7 +20,7 @@ struct NotificationPopupView: View {
 
             Spacer()
 
-            Image(systemName: "bell.badge.fill")
+            Image(systemName: "message.fill")
                 .foregroundColor(.blue)
         }
         .padding()
