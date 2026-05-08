@@ -1,20 +1,26 @@
 import SwiftUI
 
-
 struct CustomerBookingView: View {
-    
+
+    @Binding var selectedTab: Int
+
     @StateObject private var bookingService = BookingService()
     @StateObject private var vehicleService = VehicleService()
 
     private var calendarService = CalendarService()
-    
+
     @State private var selectedVehicle = ""
     @State private var selectedService = "Full System Diagnostic"
     @State private var selectedTime = "02:00 PM"
-    @State private var showSuccessMessage = false
     @State private var calendarMessage = ""
-    
+
     @State private var selectedDate = Date()
+
+    @State private var showBookingSuccessPopup = false
+    @State private var successVehicleName = ""
+    @State private var successServiceType = ""
+    @State private var successBookingDate = ""
+    @State private var successTimeSlot = ""
 
     let services = [
         "Full System Diagnostic",
@@ -30,16 +36,23 @@ struct CustomerBookingView: View {
         "04:30 PM"
     ]
 
+    init(selectedTab: Binding<Int> = .constant(1)) {
+        _selectedTab = selectedTab
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
 
                 HStack {
                     Image(systemName: "line.3.horizontal")
+
                     Text("SmartGarage")
                         .fontWeight(.bold)
                         .foregroundColor(.blue)
+
                     Spacer()
+
                     Image(systemName: "person.circle.fill")
                         .font(.title2)
                 }
@@ -168,16 +181,10 @@ struct CustomerBookingView: View {
                 .padding()
                 .background(Color.orange.opacity(0.12))
                 .cornerRadius(14)
-                
+
                 if !bookingService.errorMessage.isEmpty {
                     Text(bookingService.errorMessage)
                         .foregroundColor(.red)
-                        .font(.caption)
-                }
-
-                if showSuccessMessage {
-                    Text("Booking saved successfully!")
-                        .foregroundColor(.green)
                         .font(.caption)
                 }
 
@@ -215,6 +222,22 @@ struct CustomerBookingView: View {
                 selectedVehicle = firstVehicle.id ?? ""
             }
         }
+        .alert("Booking Completed", isPresented: $showBookingSuccessPopup) {
+            Button("OK") {
+                selectedTab = 3
+            }
+        } message: {
+            Text(
+                """
+                Your booking has been created successfully.
+
+                Vehicle: \(successVehicleName)
+                Service: \(successServiceType)
+                Date: \(successBookingDate)
+                Time: \(successTimeSlot)
+                """
+            )
+        }
     }
 
     func confirmBooking() {
@@ -224,32 +247,39 @@ struct CustomerBookingView: View {
             bookingService.errorMessage = "Please select a vehicle."
             return
         }
-        
-        func formatDate(_ date: Date) -> String {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            return formatter.string(from: date)
-        }
 
         let bookingDate = formatDate(selectedDate)
-        
+        let vehicleName = "\(vehicle.make) \(vehicle.model)"
+
         bookingService.createBooking(
             vehicleId: vehicle.id ?? "",
-            vehicleName: "\(vehicle.make) \(vehicle.model)",
+            vehicleName: vehicleName,
             serviceType: selectedService,
             bookingDate: bookingDate,
             timeSlot: selectedTime
         ) { success in
             if success {
-                showSuccessMessage = true
+                successVehicleName = vehicleName
+                successServiceType = selectedService
+                successBookingDate = bookingDate
+                successTimeSlot = selectedTime
+
+                showBookingSuccessPopup = true
+
                 addBookingToCalendar(
-                    vehicleName: "\(vehicle.make) \(vehicle.model)",
+                    vehicleName: vehicleName,
                     serviceType: selectedService,
                     bookingDate: bookingDate,
                     timeSlot: selectedTime
                 )
             }
         }
+    }
+
+    func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
     }
 
     func addBookingToCalendar(
