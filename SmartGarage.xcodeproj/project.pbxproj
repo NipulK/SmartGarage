@@ -284,6 +284,7 @@
 				INFOPLIST_FILE = SmartGarage/Info.plist;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "SmartGarage needs full calendar access to save service booking events.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "SmartGarage needs calendar access to add your service booking reminders.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "SmartGarage needs camera access to scan vehicle registration documents.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -318,6 +319,7 @@
 				INFOPLIST_FILE = SmartGarage/Info.plist;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "SmartGarage needs full calendar access to save service booking events.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "SmartGarage needs calendar access to add your service booking reminders.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "SmartGarage needs camera access to scan vehicle registration documents.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
