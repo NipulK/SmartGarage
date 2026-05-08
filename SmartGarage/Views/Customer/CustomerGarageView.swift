@@ -195,6 +195,7 @@ struct RegisteredVehicleRow: View {
                     .background(Color.red.opacity(0.1))
                     .clipShape(Circle())
             }
+            
         }
         .padding()
         .background(Color.white)
