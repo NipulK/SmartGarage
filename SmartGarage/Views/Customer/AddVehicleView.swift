@@ -183,6 +183,7 @@ struct AddVehicleView: View {
         for line in lines {
             let lower = line.lowercased()
 
+            
             if lower.contains("toyota") {
                 make = "Toyota"
             } else if lower.contains("honda") {
