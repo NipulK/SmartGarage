@@ -104,4 +104,41 @@ class VehicleService: ObservableObject {
                 }
             }
     }
+    
+    func updateVehicle(
+        vehicleId: String,
+        make: String,
+        model: String,
+        year: String,
+        color: String,
+        plate: String,
+        vin: String,
+        completion: @escaping (Bool) -> Void
+    ) {
+        isLoading = true
+        errorMessage = ""
+
+        db.collection("vehicles")
+            .document(vehicleId)
+            .updateData([
+                "make": make,
+                "model": model,
+                "year": year,
+                "color": color,
+                "plate": plate,
+                "vin": vin
+            ]) { error in
+                DispatchQueue.main.async {
+                    self.isLoading = false
+
+                    if let error = error {
+                        self.errorMessage = error.localizedDescription
+                        completion(false)
+                    } else {
+                        self.fetchVehicles()
+                        completion(true)
+                    }
+                }
+            }
+    }
 }

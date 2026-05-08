@@ -176,6 +176,16 @@ struct RegisteredVehicleRow: View {
 
             Spacer()
 
+            NavigationLink {
+                EditVehicleView(vehicle: vehicle)
+            } label: {
+                Image(systemName: "pencil")
+                    .foregroundColor(.blue)
+                    .padding(10)
+                    .background(Color.blue.opacity(0.1))
+                    .clipShape(Circle())
+            }
+
             Button {
                 onDelete()
             } label: {
