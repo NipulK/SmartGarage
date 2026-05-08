@@ -3,6 +3,7 @@ import Combine
 import FirebaseAuth
 import FirebaseFirestore
 
+
 class BookingService: ObservableObject {
 
     @Published var bookings: [Booking] = []
