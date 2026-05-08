@@ -32,7 +32,6 @@ struct WelcomeView: View {
 
                     Spacer()
 
-                    
                     NavigationLink(destination: LoginView()) {
                         Text("Get Started")
                             .foregroundColor(.white)
