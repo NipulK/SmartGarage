@@ -32,6 +32,7 @@ struct WelcomeView: View {
 
                     Spacer()
 
+                    
                     NavigationLink(destination: LoginView()) {
                         Text("Get Started")
                             .foregroundColor(.white)
@@ -55,7 +56,7 @@ struct WelcomeView: View {
 
                     Spacer()
                     
-                    NavigationLink("Create Account", destination: RegisterView())
+                    NavigationLink("Sign Up", destination: RegisterView())
                         .font(.subheadline)
                         .foregroundColor(.gray)
                     
