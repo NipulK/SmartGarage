@@ -9,6 +9,8 @@ class DamageDetectionService: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage = ""
 
+    @Published var damageReports: [DamageReport] = []
+
     @Published var damageType = ""
     @Published var severity = ""
     @Published var confidence = ""
@@ -16,6 +18,8 @@ class DamageDetectionService: ObservableObject {
     @Published var vehicleName = ""
 
     private let db = Firestore.firestore()
+
+    // MARK: - ANALYZE DAMAGE
 
     func analyzeDamage(
         image: UIImage,
@@ -26,6 +30,7 @@ class DamageDetectionService: ObservableObject {
     ) {
 
         guard let userId = Auth.auth().currentUser?.uid else {
+
             errorMessage = "User not logged in."
             completion(false)
             return
@@ -56,6 +61,35 @@ class DamageDetectionService: ObservableObject {
             )
         }
     }
+
+    // MARK: - FETCH DAMAGE REPORTS
+
+    func fetchDamageReports() {
+
+        guard let userId = Auth.auth().currentUser?.uid else {
+            return
+        }
+
+        db.collection("damageReports")
+            .whereField("userId", isEqualTo: userId)
+            .order(by: "createdAt", descending: true)
+            .addSnapshotListener { snapshot, error in
+
+                DispatchQueue.main.async {
+
+                    if let error = error {
+                        self.errorMessage = error.localizedDescription
+                        return
+                    }
+
+                    self.damageReports = snapshot?.documents.compactMap {
+                        try? $0.data(as: DamageReport.self)
+                    } ?? []
+                }
+            }
+    }
+
+    // MARK: - GENERATE RESULT
 
     private func generateDamageResult(
         for type: String
@@ -118,6 +152,8 @@ class DamageDetectionService: ObservableObject {
         }
     }
 
+    // MARK: - SAVE DAMAGE REPORT
+
     private func saveDamageReport(
         userId: String,
         vehicleId: String,
@@ -151,9 +187,13 @@ class DamageDetectionService: ObservableObject {
                         self.isLoading = false
 
                         if let error = error {
+
                             self.errorMessage = error.localizedDescription
                             completion(false)
+
                         } else {
+
+                            self.fetchDamageReports()
                             completion(true)
                         }
                     }

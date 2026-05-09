@@ -2,6 +2,9 @@ import SwiftUI
 
 struct DamageResultView: View {
 
+    @Binding var selectedTab: Int
+    @Environment(\.dismiss) private var dismiss
+
     var damageType: String = "Front Bumper Damage"
     var severity: String = "High"
     var confidence: String = "98%"
@@ -9,10 +12,29 @@ struct DamageResultView: View {
     var vehicleName: String = "Porsche 911"
     var selectedImage: UIImage? = nil
 
+    @State private var goToBooking = false
+    @State private var showSavedAlert = false
+
+    init(
+        selectedTab: Binding<Int> = .constant(2),
+        damageType: String = "Front Bumper Damage",
+        severity: String = "High",
+        confidence: String = "98%",
+        estimatedCost: String = "$450 - $600",
+        vehicleName: String = "Porsche 911",
+        selectedImage: UIImage? = nil
+    ) {
+        self._selectedTab = selectedTab
+        self.damageType = damageType
+        self.severity = severity
+        self.confidence = confidence
+        self.estimatedCost = estimatedCost
+        self.vehicleName = vehicleName
+        self.selectedImage = selectedImage
+    }
+
     var body: some View {
-
         ScrollView {
-
             VStack(alignment: .leading, spacing: 22) {
 
                 Text("Assessment Report")
@@ -24,7 +46,6 @@ struct DamageResultView: View {
                     .fontWeight(.bold)
 
                 if let selectedImage {
-
                     Image(uiImage: selectedImage)
                         .resizable()
                         .scaledToFill()
@@ -32,15 +53,12 @@ struct DamageResultView: View {
                         .frame(maxWidth: .infinity)
                         .clipped()
                         .cornerRadius(18)
-
                 } else {
-
                     RoundedRectangle(cornerRadius: 18)
                         .fill(Color.gray.opacity(0.25))
                         .frame(height: 220)
                         .overlay(
                             VStack(spacing: 12) {
-
                                 Image(systemName: "car.fill")
                                     .font(.system(size: 70))
                                     .foregroundColor(.gray)
@@ -53,33 +71,23 @@ struct DamageResultView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 18) {
-
                     HStack {
-
                         Image(systemName: "brain.head.profile")
                             .foregroundColor(.blue)
 
                         VStack(alignment: .leading) {
-
                             Text("AI Analysis Result")
                                 .font(.caption)
                                 .foregroundColor(.gray)
 
-                            Text(severity == "High"
-                                 ? "Immediate Repair Recommended"
-                                 : "Repair Recommended")
+                            Text(severity == "High" ? "Immediate Repair Recommended" : "Repair Recommended")
                                 .font(.title3)
                                 .fontWeight(.bold)
-                                .foregroundColor(
-                                    severity == "High"
-                                    ? .red
-                                    : .orange
-                                )
+                                .foregroundColor(severity == "High" ? .red : .orange)
                         }
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
-
                         Label("Damage Detected", systemImage: "info.circle")
                             .foregroundColor(.blue)
 
@@ -92,7 +100,6 @@ struct DamageResultView: View {
                     .cornerRadius(14)
 
                     HStack {
-
                         Text("Estimated Repair Cost")
                             .fontWeight(.semibold)
 
@@ -111,51 +118,28 @@ struct DamageResultView: View {
                 .cornerRadius(20)
 
                 HStack {
-
-                    ResultBox(
-                        title: "Confidence",
-                        value: confidence
-                    )
-
-                    ResultBox(
-                        title: "Severity",
-                        value: severity
-                    )
+                    ResultBox(title: "Confidence", value: confidence)
+                    ResultBox(title: "Severity", value: severity)
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
-
                     Text("AI Summary")
                         .font(.headline)
 
-                    summaryRow(
-                        icon: "checkmark.circle.fill",
-                        title: "Damage Type",
-                        value: damageType
-                    )
-
-                    summaryRow(
-                        icon: "gauge.medium",
-                        title: "Severity",
-                        value: severity
-                    )
-
-                    summaryRow(
-                        icon: "dollarsign.circle.fill",
-                        title: "Estimated Cost",
-                        value: estimatedCost
-                    )
+                    summaryRow(icon: "checkmark.circle.fill", title: "Damage Type", value: damageType)
+                    summaryRow(icon: "gauge.medium", title: "Severity", value: severity)
+                    summaryRow(icon: "dollarsign.circle.fill", title: "Estimated Cost", value: estimatedCost)
                 }
                 .padding()
                 .background(Color.white)
                 .cornerRadius(20)
 
-                Button {
-
-                    print("Book repair")
-
+                NavigationLink {
+                    CustomerBookingView(
+                        selectedTab: $selectedTab,
+                        preselectedService: "Damage Repair - \(damageType)"
+                    )
                 } label: {
-
                     Text("Book This Repair Now")
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity)
@@ -166,11 +150,8 @@ struct DamageResultView: View {
                 }
 
                 Button {
-
-                    print("Save later")
-
+                    showSavedAlert = true
                 } label: {
-
                     Text("Save for Later")
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
@@ -185,41 +166,68 @@ struct DamageResultView: View {
         .navigationTitle("Damage Result")
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
+        .alert("Saved for Later", isPresented: $showSavedAlert) {
+            Button("View Activity") {
+                selectedTab = 3
+            }
+
+            Button("OK", role: .cancel) {
+                selectedTab = 0
+            }
+        } message: {
+            Text("Your damage report has been saved. You can view it in the Activity page.")
+        }
     }
 
     func damageDescription() -> String {
-
         switch damageType {
-
         case "Body Dent":
             return "Surface dent detected on the body panel. Metal deformation identified."
-
         case "Paint Scratch":
             return "Paint layer scratches detected. Cosmetic repair recommended."
-
         case "Headlight Damage":
             return "Front lighting unit damage detected. Replacement may be required."
-
         case "Front Bumper Damage":
             return "Front bumper impact damage detected with structural deformation."
-
         case "Windshield Crack":
             return "Windshield crack detected. Visibility and safety may be affected."
-
         default:
             return "Vehicle damage detected by AI analysis."
         }
     }
+    struct ResultBox: View {
+
+        let title: String
+        let value: String
+
+        var body: some View {
+
+            VStack(alignment: .leading, spacing: 10) {
+
+                Text(title.uppercased())
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+
+                Text(value)
+                    .font(.title3)
+                    .fontWeight(.bold)
+
+                ProgressView(
+                    value: title == "Confidence"
+                    ? 0.96
+                    : 0.8
+                )
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color.white)
+            .cornerRadius(16)
+        }
+    }
 
     @ViewBuilder
-    func summaryRow(
-        icon: String,
-        title: String,
-        value: String
-    ) -> some View {
-
+    func summaryRow(icon: String, title: String, value: String) -> some View {
         HStack {
-
             Image(systemName: icon)
                 .foregroundColor(.blue)
 
@@ -230,50 +238,5 @@ struct DamageResultView: View {
             Text(value)
                 .fontWeight(.bold)
         }
-    }
-}
-
-struct ResultBox: View {
-
-    let title: String
-    let value: String
-
-    var body: some View {
-
-        VStack(alignment: .leading, spacing: 10) {
-
-            Text(title.uppercased())
-                .font(.caption2)
-                .foregroundColor(.gray)
-
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-
-            ProgressView(
-                value: title == "Confidence"
-                ? 0.96
-                : 0.8
-            )
-        }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color.white)
-        .cornerRadius(16)
-    }
-}
-
-#Preview {
-
-    NavigationStack {
-
-        DamageResultView(
-            damageType: "Front Bumper Damage",
-            severity: "High",
-            confidence: "98%",
-            estimatedCost: "$450 - $600",
-            vehicleName: "Toyota Yaris",
-            selectedImage: nil
-        )
     }
 }

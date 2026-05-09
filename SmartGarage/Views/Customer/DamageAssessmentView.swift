@@ -3,6 +3,8 @@ import PhotosUI
 
 struct DamageAssessmentView: View {
 
+    @Binding var selectedTab: Int
+
     @StateObject private var vehicleService = VehicleService()
     @StateObject private var damageService = DamageDetectionService()
 
@@ -21,14 +23,15 @@ struct DamageAssessmentView: View {
         "Windshield Crack"
     ]
 
+    init(selectedTab: Binding<Int> = .constant(2)) {
+        self._selectedTab = selectedTab
+    }
+
     var body: some View {
-
         ScrollView {
-
             VStack(spacing: 24) {
 
                 VStack(alignment: .leading, spacing: 8) {
-
                     Text("AI Damage Assessment")
                         .font(.title)
                         .fontWeight(.bold)
@@ -39,14 +42,12 @@ struct DamageAssessmentView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 12) {
-
                     Text("SELECT VEHICLE")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     if vehicleService.vehicles.isEmpty {
-
                         Text("No vehicles found. Please add a vehicle first.")
                             .font(.caption)
                             .foregroundColor(.gray)
@@ -54,13 +55,9 @@ struct DamageAssessmentView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(Color.white)
                             .cornerRadius(14)
-
                     } else {
-
                         Picker("Vehicle", selection: $selectedVehicle) {
-
                             ForEach(vehicleService.vehicles) { vehicle in
-
                                 Text("\(vehicle.make) \(vehicle.model)")
                                     .tag(vehicle.id ?? "")
                             }
@@ -74,14 +71,12 @@ struct DamageAssessmentView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-
                     Text("DAMAGE TYPE")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     Picker("Damage Type", selection: $selectedDamageType) {
-
                         ForEach(damageTypes, id: \.self) { type in
                             Text(type)
                         }
@@ -94,9 +89,7 @@ struct DamageAssessmentView: View {
                 }
 
                 VStack(spacing: 22) {
-
                     if let selectedImage {
-
                         Image(uiImage: selectedImage)
                             .resizable()
                             .scaledToFill()
@@ -104,9 +97,7 @@ struct DamageAssessmentView: View {
                             .frame(maxWidth: .infinity)
                             .clipped()
                             .cornerRadius(18)
-
                     } else {
-
                         Image(systemName: "camera.badge.ellipsis")
                             .font(.system(size: 42))
                             .foregroundColor(.blue)
@@ -124,7 +115,6 @@ struct DamageAssessmentView: View {
                     }
 
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
-
                         Label("Choose Image", systemImage: "photo")
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
@@ -135,37 +125,26 @@ struct DamageAssessmentView: View {
                     }
 
                     if !damageService.errorMessage.isEmpty {
-
                         Text(damageService.errorMessage)
                             .foregroundColor(.red)
                             .font(.caption)
                     }
 
                     Button {
-
                         scanDamage()
-
                     } label: {
-
                         if damageService.isLoading {
-
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                                 .padding()
-
                         } else {
-
                             Label("Analyze Damage", systemImage: "viewfinder")
                                 .fontWeight(.bold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
                         }
                     }
-                    .background(
-                        selectedImage == nil || selectedVehicle.isEmpty
-                        ? Color.gray
-                        : Color.blue
-                    )
+                    .background(selectedImage == nil || selectedVehicle.isEmpty ? Color.gray : Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(14)
                     .disabled(selectedImage == nil || selectedVehicle.isEmpty)
@@ -190,8 +169,8 @@ struct DamageAssessmentView: View {
             loadSelectedImage()
         }
         .navigationDestination(isPresented: $showResult) {
-
             DamageResultView(
+                selectedTab: $selectedTab,
                 damageType: damageService.damageType,
                 severity: damageService.severity,
                 confidence: damageService.confidence,
@@ -203,12 +182,9 @@ struct DamageAssessmentView: View {
     }
 
     func loadSelectedImage() {
-
         Task {
-
             if let data = try? await selectedPhoto?.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
-
                 await MainActor.run {
                     selectedImage = image
                 }
@@ -217,7 +193,6 @@ struct DamageAssessmentView: View {
     }
 
     func scanDamage() {
-
         guard let selectedImage else { return }
 
         guard let vehicle = vehicleService.vehicles.first(where: {
@@ -233,7 +208,6 @@ struct DamageAssessmentView: View {
             vehicleName: "\(vehicle.make) \(vehicle.model)",
             damageType: selectedDamageType
         ) { success in
-
             if success {
                 showResult = true
             }
@@ -242,7 +216,6 @@ struct DamageAssessmentView: View {
 }
 
 #Preview {
-
     NavigationStack {
         DamageAssessmentView()
     }

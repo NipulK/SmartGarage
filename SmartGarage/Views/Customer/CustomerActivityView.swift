@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct CustomerActivityView: View {
+
     @StateObject private var bookingService = BookingService()
+    @StateObject private var damageService = DamageDetectionService()
 
     var body: some View {
         NavigationStack {
@@ -10,10 +12,13 @@ struct CustomerActivityView: View {
 
                     HStack {
                         Image(systemName: "line.3.horizontal")
+
                         Text("SmartGarage")
                             .fontWeight(.bold)
                             .foregroundColor(.blue)
+
                         Spacer()
+
                         Image(systemName: "person.circle.fill")
                             .font(.title2)
                     }
@@ -22,19 +27,26 @@ struct CustomerActivityView: View {
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("Track your booking status and vehicle service progress in real time.")
+                    Text("Track your booking status, service progress, and saved damage reports.")
                         .font(.subheadline)
                         .foregroundColor(.gray)
+
+                    Text("Service Bookings")
+                        .font(.headline)
 
                     if bookingService.isLoading {
                         ProgressView("Loading activities...")
                             .frame(maxWidth: .infinity)
                             .padding()
+
                     } else if bookingService.bookings.isEmpty {
                         Text("No service activities found.")
                             .foregroundColor(.gray)
                             .frame(maxWidth: .infinity)
                             .padding()
+                            .background(Color.white)
+                            .cornerRadius(14)
+
                     } else {
                         ForEach(bookingService.bookings) { booking in
                             NavigationLink {
@@ -48,6 +60,26 @@ struct CustomerActivityView: View {
                                     color: colorForStatus(booking.status)
                                 )
                             }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    Text("Saved Damage Reports")
+                        .font(.headline)
+                        .padding(.top)
+
+                    if damageService.damageReports.isEmpty {
+                        Text("No saved damage reports yet.")
+                            .foregroundColor(.gray)
+                            .font(.caption)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.white)
+                            .cornerRadius(14)
+
+                    } else {
+                        ForEach(damageService.damageReports) { report in
+                            DamageReportCard(report: report)
                         }
                     }
 
@@ -62,6 +94,7 @@ struct CustomerActivityView: View {
             .background(Color(.systemGroupedBackground))
             .onAppear {
                 bookingService.fetchBookings()
+                damageService.fetchDamageReports()
             }
         }
     }
@@ -137,6 +170,48 @@ struct ActivityCard: View {
 
             Image(systemName: "chevron.right")
                 .foregroundColor(.gray)
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(16)
+    }
+}
+
+struct DamageReportCard: View {
+    let report: DamageReport
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(report.severity.lowercased() == "high" ? .red : .orange)
+                .frame(width: 42, height: 42)
+                .background(Color.orange.opacity(0.12))
+                .cornerRadius(12)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(report.damageType)
+                    .font(.headline)
+                    .foregroundColor(.black)
+
+                Text(report.vehicleName)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+
+                Text("Cost: \(report.estimatedCost)")
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+
+            Spacer()
+
+            Text(report.severity.uppercased())
+                .font(.caption2)
+                .fontWeight(.bold)
+                .foregroundColor(report.severity.lowercased() == "high" ? .red : .orange)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Color.orange.opacity(0.12))
+                .cornerRadius(8)
         }
         .padding()
         .background(Color.white)

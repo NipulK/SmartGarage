@@ -10,7 +10,7 @@ struct CustomerBookingView: View {
     private var calendarService = CalendarService()
 
     @State private var selectedVehicle = ""
-    @State private var selectedService = "Full System Diagnostic"
+    @State private var selectedService: String
     @State private var selectedTime = "02:00 PM"
 
     @State private var calendarMessage = ""
@@ -19,7 +19,7 @@ struct CustomerBookingView: View {
     @State private var showBookingAlert = false
     @State private var bookingSummary = ""
 
-    let services = [
+    let defaultServices = [
         "Full System Diagnostic",
         "Oil Change & Brake Check",
         "Tire Rotation",
@@ -33,14 +33,24 @@ struct CustomerBookingView: View {
         "04:30 PM"
     ]
 
-    init(selectedTab: Binding<Int> = .constant(1)) {
+    var services: [String] {
+        if defaultServices.contains(selectedService) {
+            return defaultServices
+        } else {
+            return [selectedService] + defaultServices
+        }
+    }
+
+    init(
+        selectedTab: Binding<Int> = .constant(1),
+        preselectedService: String = "Full System Diagnostic"
+    ) {
         self._selectedTab = selectedTab
+        self._selectedService = State(initialValue: preselectedService)
     }
 
     var body: some View {
-
         ScrollView {
-
             VStack(alignment: .leading, spacing: 22) {
 
                 HStack {
@@ -57,7 +67,6 @@ struct CustomerBookingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
-
                     Text("Book Service")
                         .font(.title2)
                         .fontWeight(.bold)
@@ -68,28 +77,20 @@ struct CustomerBookingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-
                     Text("VEHICLE TYPE")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     if vehicleService.isLoading {
-
                         ProgressView("Loading vehicles...")
                             .padding()
-
                     } else if vehicleService.vehicles.isEmpty {
-
                         Text("No vehicles found. Please add a vehicle first.")
                             .foregroundColor(.gray)
-
                     } else {
-
                         Picker("Vehicle", selection: $selectedVehicle) {
-
                             ForEach(vehicleService.vehicles) { vehicle in
-
                                 Text("\(vehicle.make) \(vehicle.model)")
                                     .tag(vehicle.id ?? "")
                             }
@@ -103,14 +104,12 @@ struct CustomerBookingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-
                     Text("SERVICE TYPE")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     Picker("Service", selection: $selectedService) {
-
                         ForEach(services, id: \.self) { service in
                             Text(service)
                         }
@@ -123,14 +122,12 @@ struct CustomerBookingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-
                     Text("SCHEDULE APPOINTMENT")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     VStack(spacing: 15) {
-
                         DatePicker(
                             "Select Date",
                             selection: $selectedDate,
@@ -139,37 +136,18 @@ struct CustomerBookingView: View {
                         )
                         .datePickerStyle(.graphical)
 
-                        LazyVGrid(
-                            columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible())
-                            ],
-                            spacing: 12
-                        ) {
-
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                             ForEach(times, id: \.self) { time in
-
                                 Button {
-
                                     selectedTime = time
-
                                 } label: {
-
                                     Text(time)
                                         .font(.caption)
                                         .fontWeight(.semibold)
                                         .frame(maxWidth: .infinity)
                                         .padding()
-                                        .background(
-                                            selectedTime == time
-                                            ? Color.blue
-                                            : Color(.systemGray6)
-                                        )
-                                        .foregroundColor(
-                                            selectedTime == time
-                                            ? .white
-                                            : .black
-                                        )
+                                        .background(selectedTime == time ? Color.blue : Color(.systemGray6))
+                                        .foregroundColor(selectedTime == time ? .white : .black)
                                         .cornerRadius(10)
                                 }
                             }
@@ -181,7 +159,6 @@ struct CustomerBookingView: View {
                 }
 
                 if !bookingService.errorMessage.isEmpty {
-
                     Text(bookingService.errorMessage)
                         .foregroundColor(.red)
                         .font(.caption)
@@ -194,25 +171,16 @@ struct CustomerBookingView: View {
                 }
 
                 Button {
-
                     confirmBooking()
-
                 } label: {
-
                     HStack {
-
                         Text("Confirm Booking")
-
                         Image(systemName: "arrow.right")
                     }
                     .fontWeight(.bold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(
-                        selectedVehicle.isEmpty
-                        ? Color.gray
-                        : Color.blue
-                    )
+                    .background(selectedVehicle.isEmpty ? Color.gray : Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(14)
                 }
@@ -223,43 +191,28 @@ struct CustomerBookingView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Booking")
         .navigationBarTitleDisplayMode(.inline)
-
         .onAppear {
-
             vehicleService.fetchVehicles()
         }
-
         .onChange(of: vehicleService.vehicles.count) {
-
             if selectedVehicle.isEmpty,
                let firstVehicle = vehicleService.vehicles.first {
-
                 selectedVehicle = firstVehicle.id ?? ""
             }
         }
-
-        .alert(
-            "Booking Confirmed",
-            isPresented: $showBookingAlert
-        ) {
-
+        .alert("Booking Confirmed", isPresented: $showBookingAlert) {
             Button("OK") {
-
                 selectedTab = 3
             }
-
         } message: {
-
             Text(bookingSummary)
         }
     }
 
     func confirmBooking() {
-
         guard let vehicle = vehicleService.vehicles.first(where: {
             $0.id == selectedVehicle
         }) else {
-
             bookingService.errorMessage = "Please select a vehicle."
             return
         }
@@ -276,9 +229,7 @@ struct CustomerBookingView: View {
             bookingDate: bookingDate,
             timeSlot: selectedTime
         ) { success in
-
             if success {
-
                 bookingSummary =
                 """
                 Vehicle: \(vehicle.make) \(vehicle.model)
@@ -313,21 +264,12 @@ struct CustomerBookingView: View {
         bookingDate: String,
         timeSlot: String
     ) {
-
-        guard let startDate = createDate(
-            dateString: bookingDate,
-            timeString: timeSlot
-        ) else {
-
+        guard let startDate = createDate(dateString: bookingDate, timeString: timeSlot) else {
             calendarMessage = "Could not create calendar date."
             return
         }
 
-        let endDate = Calendar.current.date(
-            byAdding: .hour,
-            value: 2,
-            to: startDate
-        ) ?? startDate.addingTimeInterval(7200)
+        let endDate = Calendar.current.date(byAdding: .hour, value: 2, to: startDate) ?? startDate.addingTimeInterval(7200)
 
         calendarService.requestAccessAndAddEvent(
             title: "SmartGarage - \(serviceType)",
@@ -339,23 +281,15 @@ struct CustomerBookingView: View {
         }
     }
 
-    func createDate(
-        dateString: String,
-        timeString: String
-    ) -> Date? {
-
+    func createDate(dateString: String, timeString: String) -> Date? {
         let formatter = DateFormatter()
-
         formatter.dateFormat = "yyyy-MM-dd hh:mm a"
         formatter.locale = Locale(identifier: "en_US_POSIX")
 
-        return formatter.date(
-            from: "\(dateString) \(timeString)"
-        )
+        return formatter.date(from: "\(dateString) \(timeString)")
     }
 }
 
 #Preview {
-
     CustomerBookingView(selectedTab: .constant(1))
 }

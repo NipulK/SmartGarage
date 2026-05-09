@@ -2,6 +2,12 @@ import SwiftUI
 
 struct CustomerGarageView: View {
 
+    @Binding var selectedTab: Int
+
+    init(selectedTab: Binding<Int> = .constant(2)) {
+        self._selectedTab = selectedTab
+    }
+
     @StateObject private var vehicleService = VehicleService()
 
     @State private var selectedVehicle: Vehicle?
@@ -45,7 +51,7 @@ struct CustomerGarageView: View {
                         )
                     }
 
-                    NavigationLink(destination: DamageAssessmentView()) {
+                    NavigationLink(destination: DamageAssessmentView(selectedTab: $selectedTab)) {
                         GarageOptionCard(
                             icon: "camera.viewfinder",
                             title: "AI Damage Assessment",
