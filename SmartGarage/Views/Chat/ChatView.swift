@@ -6,87 +6,69 @@ struct ChatView: View {
     let senderName: String
 
     @StateObject private var chatService = ChatService()
-
     @State private var messageText = ""
 
     var body: some View {
-
-        VStack {
+        VStack(spacing: 0) {
 
             ScrollViewReader { proxy in
-
                 ScrollView {
-
-                    VStack(spacing: 14) {
-
+                    LazyVStack(spacing: 12) {
                         ForEach(chatService.messages) { message in
-
                             MessageBubble(message: message)
                                 .id(message.id)
                         }
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.top, 16)
+                    .padding(.bottom, 10)
                 }
                 .onChange(of: chatService.messages.count) {
-
                     if let lastMessage = chatService.messages.last?.id {
-
-                        proxy.scrollTo(lastMessage, anchor: .bottom)
+                        withAnimation {
+                            proxy.scrollTo(lastMessage, anchor: .bottom)
+                        }
                     }
                 }
             }
 
             Divider()
 
-            HStack {
-
-                TextField(
-                    "Type message...",
-                    text: $messageText
-                )
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(14)
+            HStack(spacing: 12) {
+                TextField("Type message...", text: $messageText)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(18)
 
                 Button {
-
                     sendMessage()
-
                 } label: {
-
                     Image(systemName: "paperplane.fill")
+                        .font(.title3)
                         .foregroundColor(.white)
-                        .padding()
+                        .frame(width: 52, height: 52)
                         .background(Color.blue)
                         .clipShape(Circle())
                 }
             }
             .padding()
+            .background(Color.white)
         }
         .navigationTitle("Garage Chat")
         .navigationBarTitleDisplayMode(.inline)
-
+        .background(Color.white)
         .onAppear {
-
             guard let bookingId = booking.id else { return }
-
-            chatService.fetchMessages(
-                bookingId: bookingId
-            )
+            chatService.fetchMessages(bookingId: bookingId)
         }
     }
 
     func sendMessage() {
-
-        guard let bookingId = booking.id else { return }
-
-        guard !messageText.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        ).isEmpty else {
+        guard !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
 
-        
         chatService.sendMessage(
             booking: booking,
             senderName: senderName,
@@ -100,19 +82,19 @@ struct ChatView: View {
 }
 
 #Preview {
-
-    ChatView(
-        booking: Booking(
-            userId: "1",
-            vehicleId: "1",
-            vehicleName: "Toyota Yaris",
-            serviceType: "Oil Change",
-            bookingDate: "2025-05-06",
-            timeSlot: "02:00 PM",
-            status: "Pending",
-            createdAt: Date()
-        ),
-        senderName: "Alex"
-    )
-    
+    NavigationStack {
+        ChatView(
+            booking: Booking(
+                userId: "1",
+                vehicleId: "1",
+                vehicleName: "Toyota Yaris",
+                serviceType: "Oil Change",
+                bookingDate: "2025-05-06",
+                timeSlot: "02:00 PM",
+                status: "Pending",
+                createdAt: Date()
+            ),
+            senderName: "Alex"
+        )
+    }
 }

@@ -10,51 +10,70 @@ struct MessageBubble: View {
     }
 
     var body: some View {
-
         HStack {
-
             if isCurrentUser {
-                Spacer()
+                Spacer(minLength: 60)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-
+            VStack(
+                alignment: isCurrentUser ? .trailing : .leading,
+                spacing: 5
+            ) {
                 Text(message.senderName)
                     .font(.caption2)
                     .foregroundColor(.gray)
+                    .padding(.horizontal, 6)
 
                 Text(message.messageText)
-                    .padding()
+                    .font(.body)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                     .background(
                         isCurrentUser
                         ? Color.blue
-                        : Color.gray.opacity(0.2)
+                        : Color(.systemGray5)
                     )
                     .foregroundColor(
                         isCurrentUser
                         ? .white
                         : .black
                     )
-                    .cornerRadius(16)
+                    .cornerRadius(18)
             }
-            .frame(maxWidth: 260, alignment: .leading)
+            .frame(
+                maxWidth: UIScreen.main.bounds.width * 0.72,
+                alignment: isCurrentUser ? .trailing : .leading
+            )
 
             if !isCurrentUser {
-                Spacer()
+                Spacer(minLength: 60)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
 #Preview {
-
-    MessageBubble(
-        message: Message(
-            senderId: "1",
-            senderName: "Alex",
-            messageText: "Hello garage team!",
-            bookingId: "1",
-            createdAt: Date()
+    VStack(spacing: 16) {
+        MessageBubble(
+            message: Message(
+                senderId: Auth.auth().currentUser?.uid ?? "current",
+                senderName: "Customer",
+                messageText: "Hello garage team!",
+                bookingId: "1",
+                createdAt: Date()
+            )
         )
-    )
+
+        MessageBubble(
+            message: Message(
+                senderId: "staff-id",
+                senderName: "Staff",
+                messageText: "Hi, your vehicle service is almost completed.",
+                bookingId: "1",
+                createdAt: Date()
+            )
+        )
+    }
+    .padding()
 }

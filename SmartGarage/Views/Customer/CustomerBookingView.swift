@@ -12,15 +12,12 @@ struct CustomerBookingView: View {
     @State private var selectedVehicle = ""
     @State private var selectedService = "Full System Diagnostic"
     @State private var selectedTime = "02:00 PM"
-    @State private var calendarMessage = ""
 
+    @State private var calendarMessage = ""
     @State private var selectedDate = Date()
 
-    @State private var showBookingSuccessPopup = false
-    @State private var successVehicleName = ""
-    @State private var successServiceType = ""
-    @State private var successBookingDate = ""
-    @State private var successTimeSlot = ""
+    @State private var showBookingAlert = false
+    @State private var bookingSummary = ""
 
     let services = [
         "Full System Diagnostic",
@@ -37,11 +34,13 @@ struct CustomerBookingView: View {
     ]
 
     init(selectedTab: Binding<Int> = .constant(1)) {
-        _selectedTab = selectedTab
+        self._selectedTab = selectedTab
     }
 
     var body: some View {
+
         ScrollView {
+
             VStack(alignment: .leading, spacing: 22) {
 
                 HStack {
@@ -58,38 +57,39 @@ struct CustomerBookingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
+
                     Text("Book Service")
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Text("Schedule your precision maintenance with our expert technicians in just a few taps.")
+                    Text("Schedule your precision maintenance with our expert technicians.")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
+
                     Text("VEHICLE TYPE")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     if vehicleService.isLoading {
+
                         ProgressView("Loading vehicles...")
                             .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.white)
-                            .cornerRadius(14)
+
                     } else if vehicleService.vehicles.isEmpty {
+
                         Text("No vehicles found. Please add a vehicle first.")
-                            .font(.caption)
                             .foregroundColor(.gray)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.white)
-                            .cornerRadius(14)
+
                     } else {
+
                         Picker("Vehicle", selection: $selectedVehicle) {
+
                             ForEach(vehicleService.vehicles) { vehicle in
+
                                 Text("\(vehicle.make) \(vehicle.model)")
                                     .tag(vehicle.id ?? "")
                             }
@@ -103,12 +103,14 @@ struct CustomerBookingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
+
                     Text("SERVICE TYPE")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     Picker("Service", selection: $selectedService) {
+
                         ForEach(services, id: \.self) { service in
                             Text(service)
                         }
@@ -121,12 +123,14 @@ struct CustomerBookingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
+
                     Text("SCHEDULE APPOINTMENT")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.gray)
 
                     VStack(spacing: 15) {
+
                         DatePicker(
                             "Select Date",
                             selection: $selectedDate,
@@ -142,17 +146,30 @@ struct CustomerBookingView: View {
                             ],
                             spacing: 12
                         ) {
+
                             ForEach(times, id: \.self) { time in
+
                                 Button {
+
                                     selectedTime = time
+
                                 } label: {
+
                                     Text(time)
                                         .font(.caption)
                                         .fontWeight(.semibold)
                                         .frame(maxWidth: .infinity)
                                         .padding()
-                                        .background(selectedTime == time ? Color.blue : Color(.systemGray6))
-                                        .foregroundColor(selectedTime == time ? .white : .black)
+                                        .background(
+                                            selectedTime == time
+                                            ? Color.blue
+                                            : Color(.systemGray6)
+                                        )
+                                        .foregroundColor(
+                                            selectedTime == time
+                                            ? .white
+                                            : .black
+                                        )
                                         .cornerRadius(10)
                                 }
                             }
@@ -163,26 +180,8 @@ struct CustomerBookingView: View {
                     .cornerRadius(18)
                 }
 
-                HStack {
-                    Image(systemName: "clock.fill")
-                        .foregroundColor(.orange)
-
-                    VStack(alignment: .leading) {
-                        Text("Estimated Time")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-
-                        Text("2 hours")
-                            .fontWeight(.bold)
-                    }
-
-                    Spacer()
-                }
-                .padding()
-                .background(Color.orange.opacity(0.12))
-                .cornerRadius(14)
-
                 if !bookingService.errorMessage.isEmpty {
+
                     Text(bookingService.errorMessage)
                         .foregroundColor(.red)
                         .font(.caption)
@@ -195,16 +194,25 @@ struct CustomerBookingView: View {
                 }
 
                 Button {
+
                     confirmBooking()
+
                 } label: {
+
                     HStack {
+
                         Text("Confirm Booking")
+
                         Image(systemName: "arrow.right")
                     }
                     .fontWeight(.bold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(selectedVehicle.isEmpty ? Color.gray : Color.blue)
+                    .background(
+                        selectedVehicle.isEmpty
+                        ? Color.gray
+                        : Color.blue
+                    )
                     .foregroundColor(.white)
                     .cornerRadius(14)
                 }
@@ -213,61 +221,84 @@ struct CustomerBookingView: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground))
+        .navigationTitle("Booking")
+        .navigationBarTitleDisplayMode(.inline)
+
         .onAppear {
+
             vehicleService.fetchVehicles()
         }
+
         .onChange(of: vehicleService.vehicles.count) {
+
             if selectedVehicle.isEmpty,
                let firstVehicle = vehicleService.vehicles.first {
+
                 selectedVehicle = firstVehicle.id ?? ""
             }
         }
-        .alert("Booking Completed", isPresented: $showBookingSuccessPopup) {
+
+        .alert(
+            "Booking Confirmed",
+            isPresented: $showBookingAlert
+        ) {
+
             Button("OK") {
+
                 selectedTab = 3
             }
-        } message: {
-            Text(
-                """
-                Your booking has been created successfully.
 
-                Vehicle: \(successVehicleName)
-                Service: \(successServiceType)
-                Date: \(successBookingDate)
-                Time: \(successTimeSlot)
-                """
-            )
+        } message: {
+
+            Text(bookingSummary)
         }
     }
 
     func confirmBooking() {
+
         guard let vehicle = vehicleService.vehicles.first(where: {
             $0.id == selectedVehicle
         }) else {
+
             bookingService.errorMessage = "Please select a vehicle."
             return
         }
 
-        let bookingDate = formatDate(selectedDate)
-        let vehicleName = "\(vehicle.make) \(vehicle.model)"
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        let bookingDate = formatter.string(from: selectedDate)
 
         bookingService.createBooking(
             vehicleId: vehicle.id ?? "",
-            vehicleName: vehicleName,
+            vehicleName: "\(vehicle.make) \(vehicle.model)",
             serviceType: selectedService,
             bookingDate: bookingDate,
             timeSlot: selectedTime
         ) { success in
-            if success {
-                successVehicleName = vehicleName
-                successServiceType = selectedService
-                successBookingDate = bookingDate
-                successTimeSlot = selectedTime
 
-                showBookingSuccessPopup = true
+            if success {
+
+                bookingSummary =
+                """
+                Vehicle: \(vehicle.make) \(vehicle.model)
+
+                Service:
+                \(selectedService)
+
+                Date:
+                \(bookingDate)
+
+                Time:
+                \(selectedTime)
+
+                Your booking was successfully created.
+                """
+
+                showBookingAlert = true
 
                 addBookingToCalendar(
-                    vehicleName: vehicleName,
+                    vehicleName: "\(vehicle.make) \(vehicle.model)",
                     serviceType: selectedService,
                     bookingDate: bookingDate,
                     timeSlot: selectedTime
@@ -276,22 +307,18 @@ struct CustomerBookingView: View {
         }
     }
 
-    func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
-    }
-
     func addBookingToCalendar(
         vehicleName: String,
         serviceType: String,
         bookingDate: String,
         timeSlot: String
     ) {
+
         guard let startDate = createDate(
             dateString: bookingDate,
             timeString: timeSlot
         ) else {
+
             calendarMessage = "Could not create calendar date."
             return
         }
@@ -304,7 +331,7 @@ struct CustomerBookingView: View {
 
         calendarService.requestAccessAndAddEvent(
             title: "SmartGarage - \(serviceType)",
-            notes: "Vehicle: \(vehicleName)\nService: \(serviceType)",
+            notes: "Vehicle: \(vehicleName)",
             startDate: startDate,
             endDate: endDate
         ) { success, message in
@@ -316,7 +343,9 @@ struct CustomerBookingView: View {
         dateString: String,
         timeString: String
     ) -> Date? {
+
         let formatter = DateFormatter()
+
         formatter.dateFormat = "yyyy-MM-dd hh:mm a"
         formatter.locale = Locale(identifier: "en_US_POSIX")
 
@@ -327,5 +356,6 @@ struct CustomerBookingView: View {
 }
 
 #Preview {
-    CustomerBookingView()
+
+    CustomerBookingView(selectedTab: .constant(1))
 }
