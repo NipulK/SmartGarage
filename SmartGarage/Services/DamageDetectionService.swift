@@ -4,11 +4,16 @@ import FirebaseAuth
 import FirebaseFirestore
 import UIKit
 
-
 class DamageDetectionService: ObservableObject {
 
     @Published var isLoading = false
     @Published var errorMessage = ""
+
+    @Published var damageType = ""
+    @Published var severity = ""
+    @Published var confidence = ""
+    @Published var estimatedCost = ""
+    @Published var vehicleName = ""
 
     private let db = Firestore.firestore()
 
@@ -32,6 +37,12 @@ class DamageDetectionService: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
 
             let result = self.generateDamageResult(for: damageType)
+
+            self.damageType = result.damageType
+            self.severity = result.severity
+            self.confidence = result.confidence
+            self.estimatedCost = result.cost
+            self.vehicleName = vehicleName
 
             self.saveDamageReport(
                 userId: userId,

@@ -2,12 +2,12 @@ import SwiftUI
 
 struct DamageResultView: View {
 
-    
     var damageType: String = "Front Bumper Damage"
     var severity: String = "High"
     var confidence: String = "98%"
     var estimatedCost: String = "$450 - $600"
     var vehicleName: String = "Porsche 911"
+    var selectedImage: UIImage? = nil
 
     var body: some View {
 
@@ -23,21 +23,34 @@ struct DamageResultView: View {
                     .font(.title)
                     .fontWeight(.bold)
 
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(Color.gray.opacity(0.25))
-                    .frame(height: 220)
-                    .overlay(
-                        VStack(spacing: 12) {
+                if let selectedImage {
 
-                            Image(systemName: "car.fill")
-                                .font(.system(size: 70))
-                                .foregroundColor(.gray)
+                    Image(uiImage: selectedImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 220)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        .cornerRadius(18)
 
-                            Text(vehicleName)
-                                .fontWeight(.bold)
-                                .foregroundColor(.black)
-                        }
-                    )
+                } else {
+
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(Color.gray.opacity(0.25))
+                        .frame(height: 220)
+                        .overlay(
+                            VStack(spacing: 12) {
+
+                                Image(systemName: "car.fill")
+                                    .font(.system(size: 70))
+                                    .foregroundColor(.gray)
+
+                                Text(vehicleName)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.black)
+                            }
+                        )
+                }
 
                 VStack(alignment: .leading, spacing: 18) {
 
@@ -259,7 +272,8 @@ struct ResultBox: View {
             severity: "High",
             confidence: "98%",
             estimatedCost: "$450 - $600",
-            vehicleName: "Toyota Yaris"
+            vehicleName: "Toyota Yaris",
+            selectedImage: nil
         )
     }
 }

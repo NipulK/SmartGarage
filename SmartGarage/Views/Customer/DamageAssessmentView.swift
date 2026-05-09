@@ -23,7 +23,6 @@ struct DamageAssessmentView: View {
 
     var body: some View {
 
-        
         ScrollView {
 
             VStack(spacing: 24) {
@@ -39,7 +38,6 @@ struct DamageAssessmentView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // VEHICLE PICKER
                 VStack(alignment: .leading, spacing: 12) {
 
                     Text("SELECT VEHICLE")
@@ -75,7 +73,6 @@ struct DamageAssessmentView: View {
                     }
                 }
 
-                // DAMAGE TYPE PICKER
                 VStack(alignment: .leading, spacing: 12) {
 
                     Text("DAMAGE TYPE")
@@ -96,7 +93,6 @@ struct DamageAssessmentView: View {
                     .cornerRadius(14)
                 }
 
-                // IMAGE SECTION
                 VStack(spacing: 22) {
 
                     if let selectedImage {
@@ -181,33 +177,31 @@ struct DamageAssessmentView: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground))
-
         .onAppear {
-
             vehicleService.fetchVehicles()
         }
-
         .onChange(of: vehicleService.vehicles.count) {
-
             if selectedVehicle.isEmpty,
                let firstVehicle = vehicleService.vehicles.first {
-
                 selectedVehicle = firstVehicle.id ?? ""
             }
         }
-
         .onChange(of: selectedPhoto) {
-
             loadSelectedImage()
         }
-
         .navigationDestination(isPresented: $showResult) {
 
-            DamageResultView()
+            DamageResultView(
+                damageType: damageService.damageType,
+                severity: damageService.severity,
+                confidence: damageService.confidence,
+                estimatedCost: damageService.estimatedCost,
+                vehicleName: damageService.vehicleName,
+                selectedImage: selectedImage
+            )
         }
     }
 
-    // LOAD IMAGE
     func loadSelectedImage() {
 
         Task {
@@ -216,14 +210,12 @@ struct DamageAssessmentView: View {
                let image = UIImage(data: data) {
 
                 await MainActor.run {
-
                     selectedImage = image
                 }
             }
         }
     }
 
-    // ANALYZE DAMAGE
     func scanDamage() {
 
         guard let selectedImage else { return }
@@ -231,7 +223,6 @@ struct DamageAssessmentView: View {
         guard let vehicle = vehicleService.vehicles.first(where: {
             $0.id == selectedVehicle
         }) else {
-
             damageService.errorMessage = "Please select a vehicle."
             return
         }
@@ -244,7 +235,6 @@ struct DamageAssessmentView: View {
         ) { success in
 
             if success {
-
                 showResult = true
             }
         }
@@ -254,7 +244,6 @@ struct DamageAssessmentView: View {
 #Preview {
 
     NavigationStack {
-
         DamageAssessmentView()
     }
 }
