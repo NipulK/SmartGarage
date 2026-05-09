@@ -23,6 +23,7 @@ struct DamageAssessmentView: View {
 
     var body: some View {
 
+        
         ScrollView {
 
             VStack(spacing: 24) {

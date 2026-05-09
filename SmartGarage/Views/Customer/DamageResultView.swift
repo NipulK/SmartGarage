@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DamageResultView: View {
 
+    
     var damageType: String = "Front Bumper Damage"
     var severity: String = "High"
     var confidence: String = "98%"

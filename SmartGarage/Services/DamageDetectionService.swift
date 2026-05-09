@@ -4,6 +4,7 @@ import FirebaseAuth
 import FirebaseFirestore
 import UIKit
 
+
 class DamageDetectionService: ObservableObject {
 
     @Published var isLoading = false
