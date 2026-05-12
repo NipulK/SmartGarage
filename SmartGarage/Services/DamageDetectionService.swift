@@ -147,6 +147,16 @@ class DamageDetectionService: ObservableObject {
             )
         }
 
+        if let vehicleFallback = vehicleDamageFallback(from: rankedResults) {
+            let details = damageDetails(for: vehicleFallback.damageType, confidence: vehicleFallback.confidence)
+            return (
+                vehicleFallback.damageType,
+                details.severity,
+                vehicleFallback.confidence,
+                details.estimatedCost
+            )
+        }
+
         let topConfidence = observations.first?.confidence ?? 0
         return (
             "Damage Not Clearly Classified",
@@ -174,6 +184,16 @@ class DamageDetectionService: ObservableObject {
             return "Headlight Damage"
         }
 
+        if label.contains("side door") ||
+            label.contains("car door") ||
+            label.contains("door") ||
+            label.contains("side panel") ||
+            label.contains("body side") ||
+            label.contains("quarter panel") ||
+            label.contains("side impact") {
+            return "Side Door Damage"
+        }
+
         if label.contains("bumper") ||
             label.contains("front") ||
             label.contains("collision") ||
@@ -199,6 +219,52 @@ class DamageDetectionService: ObservableObject {
         return nil
     }
 
+    private func vehicleDamageFallback(
+        from observations: ArraySlice<VNClassificationObservation>
+    ) -> (
+        damageType: String,
+        confidence: Float
+    )? {
+        for observation in observations {
+            let label = observation.identifier.lowercased()
+
+            if label.contains("grille") ||
+                label.contains("radiator") ||
+                label.contains("bumper") ||
+                label.contains("headlight") ||
+                label.contains("headlamp") {
+                return ("Front Bumper Damage", max(observation.confidence, 0.72))
+            }
+
+            if label.contains("door") ||
+                label.contains("side") ||
+                label.contains("window") ||
+                label.contains("mirror") ||
+                label.contains("handle") ||
+                label.contains("fender") ||
+                label.contains("car wheel") {
+                return ("Side Door Damage", max(observation.confidence, 0.68))
+            }
+
+            if label.contains("car") ||
+                label.contains("automobile") ||
+                label.contains("vehicle") ||
+                label.contains("minivan") ||
+                label.contains("jeep") ||
+                label.contains("taxi") ||
+                label.contains("racer") ||
+                label.contains("limousine") ||
+                label.contains("pickup") ||
+                label.contains("tow truck") ||
+                label.contains("convertible") ||
+                label.contains("sports car") {
+                return ("Side Door Damage", max(observation.confidence, 0.62))
+            }
+        }
+
+        return nil
+    }
+
     private func damageDetails(
         for damageType: String,
         confidence: Float
@@ -213,6 +279,8 @@ class DamageDetectionService: ObservableObject {
             return confidence >= 0.75 ? ("Medium", "$200 - $450") : ("Low", "$120 - $250")
         case "Front Bumper Damage":
             return confidence >= 0.75 ? ("High", "$450 - $700") : ("Medium", "$250 - $500")
+        case "Side Door Damage":
+            return confidence >= 0.75 ? ("High", "$500 - $1,200") : ("Medium", "$300 - $800")
         case "Paint Scratch":
             return ("Low", "$80 - $180")
         case "Body Dent":

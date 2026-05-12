@@ -227,6 +227,8 @@ struct DamageResultView: View {
             return "Front lighting unit damage detected. Replacement may be required."
         case "Front Bumper Damage":
             return "Front bumper impact damage detected with structural deformation."
+        case "Side Door Damage":
+            return "Side door/body panel damage detected with visible denting and scrape marks. Door shell and paint repair may be required."
         case "Windshield Crack":
             return "Windshield crack detected. Visibility and safety may be affected."
         case "Damage Not Clearly Classified":
