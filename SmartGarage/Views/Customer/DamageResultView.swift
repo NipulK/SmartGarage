@@ -12,7 +12,6 @@ struct DamageResultView: View {
     var vehicleName: String = "Porsche 911"
     var selectedImage: UIImage? = nil
 
-    @State private var goToBooking = false
     @State private var showSavedAlert = false
 
     init(
@@ -44,95 +43,19 @@ struct DamageResultView: View {
                 Text("AI Analysis Complete")
                     .font(.title)
                     .fontWeight(.bold)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
 
-                if let selectedImage {
-                    Image(uiImage: selectedImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 220)
-                        .frame(maxWidth: .infinity)
-                        .clipped()
-                        .cornerRadius(18)
-                } else {
-                    RoundedRectangle(cornerRadius: 18)
-                        .fill(Color.gray.opacity(0.25))
-                        .frame(height: 220)
-                        .overlay(
-                            VStack(spacing: 12) {
-                                Image(systemName: "car.fill")
-                                    .font(.system(size: 70))
-                                    .foregroundColor(.gray)
+                damageImageSection
 
-                                Text(vehicleName)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.black)
-                            }
-                        )
-                }
+                analysisResultSection
 
-                VStack(alignment: .leading, spacing: 18) {
-                    HStack {
-                        Image(systemName: "brain.head.profile")
-                            .foregroundColor(.blue)
-
-                        VStack(alignment: .leading) {
-                            Text("AI Analysis Result")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-
-                            Text(severity == "High" ? "Immediate Repair Recommended" : "Repair Recommended")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .foregroundColor(severity == "High" ? .red : .orange)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("Damage Detected", systemImage: "info.circle")
-                            .foregroundColor(.blue)
-
-                        Text(damageDescription())
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.08))
-                    .cornerRadius(14)
-
-                    HStack {
-                        Text("Estimated Repair Cost")
-                            .fontWeight(.semibold)
-
-                        Spacer()
-
-                        Text(estimatedCost)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                    }
-                    .padding()
-                    .background(Color.blue.opacity(0.08))
-                    .cornerRadius(14)
-                }
-                .padding()
-                .background(Color.white)
-                .cornerRadius(20)
-
-                HStack {
+                HStack(spacing: 12) {
                     ResultBox(title: "Confidence", value: confidence)
                     ResultBox(title: "Severity", value: severity)
                 }
 
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("AI Summary")
-                        .font(.headline)
-
-                    summaryRow(icon: "checkmark.circle.fill", title: "Damage Type", value: damageType)
-                    summaryRow(icon: "gauge.medium", title: "Severity", value: severity)
-                    summaryRow(icon: "dollarsign.circle.fill", title: "Estimated Cost", value: estimatedCost)
-                }
-                .padding()
-                .background(Color.white)
-                .cornerRadius(20)
+                summarySection
 
                 NavigationLink {
                     CustomerBookingView(
@@ -162,6 +85,7 @@ struct DamageResultView: View {
                 }
             }
             .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .navigationTitle("Damage Result")
         .navigationBarTitleDisplayMode(.inline)
@@ -177,6 +101,105 @@ struct DamageResultView: View {
         } message: {
             Text("Your damage report has been saved. You can view it in the Activity page.")
         }
+    }
+
+    private var damageImageSection: some View {
+        Group {
+            if let selectedImage {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 220)
+                    .clipped()
+                    .cornerRadius(18)
+            } else {
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color.gray.opacity(0.25))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 220)
+                    .overlay(
+                        VStack(spacing: 12) {
+                            Image(systemName: "car.fill")
+                                .font(.system(size: 70))
+                                .foregroundColor(.gray)
+
+                            Text(vehicleName)
+                                .fontWeight(.bold)
+                                .foregroundColor(.black)
+                        }
+                    )
+            }
+        }
+    }
+
+    private var analysisResultSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "brain.head.profile")
+                    .foregroundColor(.blue)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("AI Analysis Result")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+
+                    Text(severity == "High" ? "Immediate Repair Recommended" : "Repair Recommended")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(severity == "High" ? .red : .orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Damage Detected", systemImage: "info.circle")
+                    .foregroundColor(.blue)
+
+                Text(damageDescription())
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.gray.opacity(0.08))
+            .cornerRadius(14)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Estimated Repair Cost")
+                    .fontWeight(.semibold)
+
+                Text(estimatedCost)
+                    .fontWeight(.bold)
+                    .foregroundColor(.blue)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.blue.opacity(0.08))
+            .cornerRadius(14)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .cornerRadius(20)
+    }
+
+    private var summarySection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("AI Summary")
+                .font(.headline)
+
+            summaryRow(icon: "checkmark.circle.fill", title: "Damage Type", value: damageType)
+            summaryRow(icon: "gauge.medium", title: "Severity", value: severity)
+            summaryRow(icon: "dollarsign.circle.fill", title: "Estimated Cost", value: estimatedCost)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .cornerRadius(20)
     }
 
     func damageDescription() -> String {
@@ -195,48 +218,82 @@ struct DamageResultView: View {
             return "Vehicle damage detected by AI analysis."
         }
     }
-    struct ResultBox: View {
-
-        let title: String
-        let value: String
-
-        var body: some View {
-
-            VStack(alignment: .leading, spacing: 10) {
-
-                Text(title.uppercased())
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-
-                Text(value)
-                    .font(.title3)
-                    .fontWeight(.bold)
-
-                ProgressView(
-                    value: title == "Confidence"
-                    ? 0.96
-                    : 0.8
-                )
-            }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color.white)
-            .cornerRadius(16)
-        }
-    }
 
     @ViewBuilder
     func summaryRow(icon: String, title: String, value: String) -> some View {
-        HStack {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
                 .foregroundColor(.blue)
 
             Text(title)
+                .foregroundColor(.black)
 
-            Spacer()
+            Spacer(minLength: 8)
 
             Text(value)
                 .fontWeight(.bold)
+                .multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: false, vertical: true)
         }
+    }
+}
+
+struct ResultBox: View {
+
+    let title: String
+    let value: String
+
+    var progressValue: Double {
+        if title == "Confidence" {
+            let number = value.replacingOccurrences(of: "%", with: "")
+            return (Double(number) ?? 0) / 100
+        }
+
+        switch value.lowercased() {
+        case "high":
+            return 1.0
+        case "medium":
+            return 0.65
+        case "low":
+            return 0.35
+        default:
+            return 0.5
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title.uppercased())
+                .font(.caption2)
+                .foregroundColor(.gray)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            ProgressView(value: progressValue)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+        .background(Color.white)
+        .cornerRadius(16)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        DamageResultView(
+            selectedTab: .constant(2),
+            damageType: "Front Bumper Damage",
+            severity: "High",
+            confidence: "98%",
+            estimatedCost: "$450 - $600",
+            vehicleName: "Toyota Yaris",
+            selectedImage: nil
+        )
     }
 }
