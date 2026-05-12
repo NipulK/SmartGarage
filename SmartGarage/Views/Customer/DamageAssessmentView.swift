@@ -14,16 +14,6 @@ struct DamageAssessmentView: View {
     @State private var isLoadingImage = false
     @State private var showResult = false
 
-    @State private var selectedDamageType = "Dent"
-
-    let damageTypes = [
-        "Dent",
-        "Scratch",
-        "Broken Light",
-        "Front Bumper Damage",
-        "Windshield Crack"
-    ]
-
     init(selectedTab: Binding<Int> = .constant(2)) {
         self._selectedTab = selectedTab
     }
@@ -47,7 +37,6 @@ struct DamageAssessmentView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     vehiclePickerSection
-                    damageTypeSection
                     photoUploadSection(
                         containerWidth: max(proxy.size.width - 32, 0)
                     )
@@ -111,26 +100,6 @@ struct DamageAssessmentView: View {
         }
     }
 
-    private var damageTypeSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("DAMAGE TYPE")
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundColor(.gray)
-
-            Picker("Damage Type", selection: $selectedDamageType) {
-                ForEach(damageTypes, id: \.self) { type in
-                    Text(type)
-                }
-            }
-            .pickerStyle(.menu)
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white)
-            .cornerRadius(14)
-        }
-    }
-
     private func photoUploadSection(containerWidth: CGFloat) -> some View {
         let cardPadding: CGFloat = 16
         let previewWidth = max(containerWidth - (cardPadding * 2), 0)
@@ -152,6 +121,13 @@ struct DamageAssessmentView: View {
                 Text(damageService.errorMessage)
                     .foregroundColor(.red)
                     .font(.caption)
+                    .frame(width: previewWidth, alignment: .leading)
+            }
+
+            if selectedImage != nil && damageService.errorMessage.isEmpty {
+                Label("AI will detect the damage type from this image.", systemImage: "sparkles")
+                    .font(.caption)
+                    .foregroundColor(.gray)
                     .frame(width: previewWidth, alignment: .leading)
             }
 
@@ -285,8 +261,7 @@ struct DamageAssessmentView: View {
         damageService.analyzeDamage(
             image: selectedImage,
             vehicleId: vehicle.id ?? "",
-            vehicleName: "\(vehicle.make) \(vehicle.model)",
-            damageType: selectedDamageType
+            vehicleName: "\(vehicle.make) \(vehicle.model)"
         ) { success in
             if success {
                 showResult = true

@@ -155,10 +155,10 @@ struct DamageResultView: View {
                         .font(.caption)
                         .foregroundColor(.gray)
 
-                    Text(severity == "High" ? "Immediate Repair Recommended" : "Repair Recommended")
+                    Text(recommendationTitle())
                         .font(.title3)
                         .fontWeight(.bold)
-                        .foregroundColor(severity == "High" ? .red : .orange)
+                        .foregroundColor(recommendationColor())
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -229,8 +229,29 @@ struct DamageResultView: View {
             return "Front bumper impact damage detected with structural deformation."
         case "Windshield Crack":
             return "Windshield crack detected. Visibility and safety may be affected."
+        case "Damage Not Clearly Classified":
+            return "The uploaded photo was analyzed, but the model could not confidently identify a specific damage type. A clearer damage-focused photo or a damage-trained model is needed."
         default:
             return "Vehicle damage detected by AI analysis."
+        }
+    }
+
+    func recommendationTitle() -> String {
+        if severity == "Unknown" {
+            return "Manual Inspection Needed"
+        }
+
+        return severity == "High" ? "Immediate Repair Recommended" : "Repair Recommended"
+    }
+
+    func recommendationColor() -> Color {
+        switch severity {
+        case "High":
+            return .red
+        case "Unknown":
+            return .gray
+        default:
+            return .orange
         }
     }
 

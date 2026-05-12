@@ -27,7 +27,6 @@ class DamageDetectionService: ObservableObject {
         image: UIImage,
         vehicleId: String,
         vehicleName: String,
-        damageType: String,
         completion: @escaping (Bool) -> Void
     ) {
 
@@ -64,38 +63,23 @@ class DamageDetectionService: ObservableObject {
                         print("AI Prediction:", firstResult.identifier)
                         print("AI Confidence:", firstResult.confidence)
                         
-                        let confidenceValue =
-                        Int(firstResult.confidence * 100)
+                        let analysis = self.detectDamage(from: results)
+                        let confidenceValue = Int(analysis.confidence * 100)
 
-                        self.damageType = damageType
+                        self.damageType = analysis.damageType
                         self.vehicleName = vehicleName
                         self.confidence = "\(confidenceValue)%"
-
-                        // AI BASED SEVERITY
-                        if confidenceValue >= 90 {
-
-                            self.severity = "High"
-                            self.estimatedCost = "$500 - $900"
-
-                        } else if confidenceValue >= 75 {
-
-                            self.severity = "Medium"
-                            self.estimatedCost = "$250 - $500"
-
-                        } else {
-
-                            self.severity = "Low"
-                            self.estimatedCost = "$80 - $250"
-                        }
+                        self.severity = analysis.severity
+                        self.estimatedCost = analysis.estimatedCost
 
                         self.saveDamageReport(
                             userId: userId,
                             vehicleId: vehicleId,
                             vehicleName: vehicleName,
-                            damageType: damageType,
-                            severity: self.severity,
-                            confidence: self.confidence,
-                            estimatedCost: self.estimatedCost,
+                            damageType: analysis.damageType,
+                            severity: analysis.severity,
+                            confidence: "\(confidenceValue)%",
+                            estimatedCost: analysis.estimatedCost,
                             completion: completion
                         )
 
@@ -135,6 +119,106 @@ class DamageDetectionService: ObservableObject {
             isLoading = false
             errorMessage = error.localizedDescription
             completion(false)
+        }
+    }
+
+    private func detectDamage(
+        from observations: [VNClassificationObservation]
+    ) -> (
+        damageType: String,
+        severity: String,
+        confidence: Float,
+        estimatedCost: String
+    ) {
+        let rankedResults = observations.prefix(5)
+        let matchedResult = rankedResults.compactMap { observation in
+            damageCategory(for: observation.identifier).map {
+                (category: $0, confidence: observation.confidence)
+            }
+        }.first
+
+        if let matchedResult {
+            let details = damageDetails(for: matchedResult.category, confidence: matchedResult.confidence)
+            return (
+                matchedResult.category,
+                details.severity,
+                matchedResult.confidence,
+                details.estimatedCost
+            )
+        }
+
+        let topConfidence = observations.first?.confidence ?? 0
+        return (
+            "Damage Not Clearly Classified",
+            "Unknown",
+            topConfidence,
+            "Requires inspection"
+        )
+    }
+
+    private func damageCategory(for identifier: String) -> String? {
+        let label = identifier.lowercased()
+
+        if label.contains("windshield") ||
+            label.contains("windscreen") ||
+            label.contains("glass") ||
+            label.contains("crack") {
+            return "Windshield Crack"
+        }
+
+        if label.contains("headlight") ||
+            label.contains("tail light") ||
+            label.contains("taillight") ||
+            label.contains("lamp") ||
+            label.contains("broken light") {
+            return "Headlight Damage"
+        }
+
+        if label.contains("bumper") ||
+            label.contains("front") ||
+            label.contains("collision") ||
+            label.contains("crash") ||
+            label.contains("impact") {
+            return "Front Bumper Damage"
+        }
+
+        if label.contains("scratch") ||
+            label.contains("scrape") ||
+            label.contains("paint") ||
+            label.contains("scuff") {
+            return "Paint Scratch"
+        }
+
+        if label.contains("dent") ||
+            label.contains("deform") ||
+            label.contains("body damage") ||
+            label.contains("panel") {
+            return "Body Dent"
+        }
+
+        return nil
+    }
+
+    private func damageDetails(
+        for damageType: String,
+        confidence: Float
+    ) -> (
+        severity: String,
+        estimatedCost: String
+    ) {
+        switch damageType {
+        case "Windshield Crack":
+            return ("High", "$300 - $900")
+        case "Headlight Damage":
+            return confidence >= 0.75 ? ("Medium", "$200 - $450") : ("Low", "$120 - $250")
+        case "Front Bumper Damage":
+            return confidence >= 0.75 ? ("High", "$450 - $700") : ("Medium", "$250 - $500")
+        case "Paint Scratch":
+            return ("Low", "$80 - $180")
+        case "Body Dent":
+            return confidence >= 0.75 ? ("Medium", "$150 - $300") : ("Low", "$80 - $180")
+        default:
+            return ("Unknown", "Requires inspection")
         }
     }
     
