@@ -33,59 +33,67 @@ struct DamageResultView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+        GeometryReader { proxy in
+            ScrollView {
+                let contentWidth = max(proxy.size.width - 32, 0)
+                let resultBoxWidth = max((contentWidth - 12) / 2, 0)
 
-                Text("Assessment Report")
-                    .font(.caption)
-                    .foregroundColor(.blue)
+                VStack(alignment: .leading, spacing: 22) {
 
-                Text("AI Analysis Complete")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
+                    Text("Assessment Report")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .frame(width: contentWidth, alignment: .leading)
 
-                damageImageSection
-
-                analysisResultSection
-
-                HStack(spacing: 12) {
-                    ResultBox(title: "Confidence", value: confidence)
-                    ResultBox(title: "Severity", value: severity)
-                }
-
-                summarySection
-
-                NavigationLink {
-                    CustomerBookingView(
-                        selectedTab: $selectedTab,
-                        preselectedService: "Damage Repair - \(damageType)"
-                    )
-                } label: {
-                    Text("Book This Repair Now")
+                    Text("AI Analysis Complete")
+                        .font(.title)
                         .fontWeight(.bold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(14)
-                }
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                        .frame(width: contentWidth, alignment: .leading)
 
-                Button {
-                    showSavedAlert = true
-                } label: {
-                    Text("Save for Later")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.white)
-                        .foregroundColor(.black)
-                        .cornerRadius(14)
+                    damageImageSection(width: contentWidth)
+
+                    analysisResultSection(width: contentWidth)
+
+                    HStack(spacing: 12) {
+                        ResultBox(title: "Confidence", value: confidence, width: resultBoxWidth)
+                        ResultBox(title: "Severity", value: severity, width: resultBoxWidth)
+                    }
+                    .frame(width: contentWidth)
+
+                    summarySection(width: contentWidth)
+
+                    NavigationLink {
+                        CustomerBookingView(
+                            selectedTab: $selectedTab,
+                            preselectedService: "Damage Repair - \(damageType)"
+                        )
+                    } label: {
+                        Text("Book This Repair Now")
+                            .fontWeight(.bold)
+                            .frame(width: contentWidth)
+                            .padding(.vertical)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(14)
+                    }
+
+                    Button {
+                        showSavedAlert = true
+                    } label: {
+                        Text("Save for Later")
+                            .fontWeight(.semibold)
+                            .frame(width: contentWidth)
+                            .padding(.vertical)
+                            .background(Color.white)
+                            .foregroundColor(.black)
+                            .cornerRadius(14)
+                    }
                 }
+                .padding()
+                .frame(width: proxy.size.width, alignment: .leading)
             }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .navigationTitle("Damage Result")
         .navigationBarTitleDisplayMode(.inline)
@@ -103,38 +111,41 @@ struct DamageResultView: View {
         }
     }
 
-    private var damageImageSection: some View {
-        Group {
+    private func damageImageSection(width: CGFloat) -> some View {
+        let imageHeight: CGFloat = 220
+
+        return ZStack {
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.gray.opacity(0.25))
+
             if let selectedImage {
                 Image(uiImage: selectedImage)
                     .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 220)
+                    .scaledToFit()
+                    .frame(width: width, height: imageHeight)
                     .clipped()
-                    .cornerRadius(18)
             } else {
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(Color.gray.opacity(0.25))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 220)
-                    .overlay(
-                        VStack(spacing: 12) {
-                            Image(systemName: "car.fill")
-                                .font(.system(size: 70))
-                                .foregroundColor(.gray)
+                VStack(spacing: 12) {
+                    Image(systemName: "car.fill")
+                        .font(.system(size: 70))
+                        .foregroundColor(.gray)
 
-                            Text(vehicleName)
-                                .fontWeight(.bold)
-                                .foregroundColor(.black)
-                        }
-                    )
+                    Text(vehicleName)
+                        .fontWeight(.bold)
+                        .foregroundColor(.black)
+                }
             }
         }
+        .frame(width: width, height: imageHeight)
+        .cornerRadius(18)
+        .clipped()
     }
 
-    private var analysisResultSection: some View {
-        VStack(alignment: .leading, spacing: 18) {
+    private func analysisResultSection(width: CGFloat) -> some View {
+        let cardPadding: CGFloat = 16
+        let innerWidth = max(width - (cardPadding * 2), 0)
+
+        return VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "brain.head.profile")
                     .foregroundColor(.blue)
@@ -150,9 +161,9 @@ struct DamageResultView: View {
                         .foregroundColor(severity == "High" ? .red : .orange)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(width: innerWidth, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 8) {
                 Label("Damage Detected", systemImage: "info.circle")
@@ -164,7 +175,7 @@ struct DamageResultView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(width: innerWidth, alignment: .leading)
             .background(Color.gray.opacity(0.08))
             .cornerRadius(14)
 
@@ -177,18 +188,21 @@ struct DamageResultView: View {
                     .foregroundColor(.blue)
             }
             .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(width: innerWidth, alignment: .leading)
             .background(Color.blue.opacity(0.08))
             .cornerRadius(14)
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(cardPadding)
+        .frame(width: width, alignment: .leading)
         .background(Color.white)
         .cornerRadius(20)
+        .clipped()
     }
 
-    private var summarySection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+    private func summarySection(width: CGFloat) -> some View {
+        let cardPadding: CGFloat = 16
+
+        return VStack(alignment: .leading, spacing: 14) {
             Text("AI Summary")
                 .font(.headline)
 
@@ -196,10 +210,11 @@ struct DamageResultView: View {
             summaryRow(icon: "gauge.medium", title: "Severity", value: severity)
             summaryRow(icon: "dollarsign.circle.fill", title: "Estimated Cost", value: estimatedCost)
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(cardPadding)
+        .frame(width: width, alignment: .leading)
         .background(Color.white)
         .cornerRadius(20)
+        .clipped()
     }
 
     func damageDescription() -> String {
@@ -242,6 +257,7 @@ struct ResultBox: View {
 
     let title: String
     let value: String
+    let width: CGFloat
 
     var progressValue: Double {
         if title == "Confidence" {
@@ -278,9 +294,10 @@ struct ResultBox: View {
             ProgressView(value: progressValue)
         }
         .padding()
-        .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+        .frame(width: width, height: 120, alignment: .leading)
         .background(Color.white)
         .cornerRadius(16)
+        .clipped()
     }
 }
 
