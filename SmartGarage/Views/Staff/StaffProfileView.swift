@@ -3,7 +3,7 @@ import FirebaseAuth
 
 struct StaffProfileView: View {
 
-    @State private var showLogoutAlert = false
+    var onLogoutRequested: () -> Void = { }
 
     var body: some View {
         NavigationStack {
@@ -58,7 +58,7 @@ struct StaffProfileView: View {
                     }
 
                     Button {
-                        showLogoutAlert = true
+                        onLogoutRequested()
                     } label: {
                         Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
                             .fontWeight(.bold)
@@ -73,19 +73,6 @@ struct StaffProfileView: View {
             }
             .navigationTitle("Staff Profile")
             .background(Color(.systemGroupedBackground))
-            .alert("Logout", isPresented: $showLogoutAlert) {
-                Button("Cancel", role: .cancel) { }
-
-                Button("Logout", role: .destructive) {
-                    do {
-                        try Auth.auth().signOut()
-                    } catch {
-                        print(error.localizedDescription)
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to logout?")
-            }
         }
     }
 }

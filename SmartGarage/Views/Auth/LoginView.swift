@@ -57,7 +57,7 @@ struct LoginView: View {
             Spacer()
             
             NavigationLink("", destination: CustomerMainView(), isActive: $goToCustomer)
-            NavigationLink("", destination: StaffMainView(), isActive: $goToStaff)
+            NavigationLink("", destination: StaffMainView(isStaffLoggedIn: $goToStaff), isActive: $goToStaff)
         }
     }
     
