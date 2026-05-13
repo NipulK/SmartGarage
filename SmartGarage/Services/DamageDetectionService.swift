@@ -476,6 +476,13 @@ class DamageDetectionService: ObservableObject {
             return ("Rear Bumper Damage", 0.70)
         }
 
+        if fullRedRatio > 0.012 &&
+            fullRedRatio < 0.22 &&
+            panelRatio > 0.08 &&
+            brightLampRatio > 0.006 {
+            return ("Rear Bumper Damage", 0.82)
+        }
+
         if fullRedRatio > 0.006 &&
             fullRedRatio < 0.16 &&
             brightLampRatio > 0.012 &&
@@ -484,11 +491,13 @@ class DamageDetectionService: ObservableObject {
         }
 
         if brightLampRatio > 0.045 &&
+            fullRedRatio < 0.012 &&
             darkGapRatio > 0.025 {
             return ("Front Bumper Damage", 0.82)
         }
 
         if brightLampRatio > 0.055 &&
+            fullRedRatio < 0.012 &&
             upperDarkRatio < 0.08 {
             return ("Front Bumper Damage", 0.78)
         }

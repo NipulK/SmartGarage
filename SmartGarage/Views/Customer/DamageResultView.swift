@@ -224,15 +224,15 @@ struct DamageResultView: View {
         case "Paint Scratch":
             return "Paint layer scratches detected. Cosmetic repair recommended."
         case "Headlight Damage":
-            return "Front lighting unit damage detected. Replacement may be required."
+            return "Headlight damage detected. Lamp repair or replacement may be required."
         case "Front Bumper Damage":
-            return "Front bumper, fender, or headlight-area impact damage detected with visible deformation. Bumper, fender, lamp, and paint repair may be required."
+            return "Front bumper impact damage detected with visible deformation. Bumper repair and paint refinishing may be required."
         case "Rear Bumper Damage":
-            return "Rear bumper or rear-quarter panel damage detected with visible denting, scuffing, or scrape marks. Bumper, tail light, and paint repair may be required."
+            return "Rear bumper dent detected with visible inward deformation. Bumper repair and paint refinishing may be required."
         case "Bumper Damage":
-            return "Bumper impact damage detected. The exact front or rear location should be confirmed during inspection."
+            return "Bumper impact damage detected with visible deformation. Bumper repair may be required."
         case "Side Door Damage":
-            return "Side door/body panel damage detected with visible denting and scrape marks. Door shell and paint repair may be required."
+            return "Side door damage detected with visible denting and scrape marks. Door shell and paint repair may be required."
         case "Windshield Crack":
             return "Windshield crack detected. Visibility and safety may be affected."
         case "Damage Not Clearly Classified":
