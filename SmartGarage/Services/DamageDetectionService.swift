@@ -210,7 +210,7 @@ class DamageDetectionService: ObservableObject {
             label.contains("rear quarter") ||
             label.contains("quarter panel") ||
             label.contains("license plate") {
-            return "Rear Bumper Damage"
+            return "Rear Bumper Dent"
         }
 
         if label.contains("headlight") ||
@@ -218,7 +218,7 @@ class DamageDetectionService: ObservableObject {
             label.contains("front light") ||
             label.contains("front lamp") ||
             label.contains("broken light") {
-            return "Headlight Damage"
+            return "Front Fender Damage"
         }
 
         if label.contains("side door") ||
@@ -227,7 +227,7 @@ class DamageDetectionService: ObservableObject {
             label.contains("side panel") ||
             label.contains("body side") ||
             label.contains("side impact") {
-            return "Side Door Damage"
+            return "Side Door Dent"
         }
 
         if label.contains("front bumper") ||
@@ -276,14 +276,14 @@ class DamageDetectionService: ObservableObject {
                 label.contains("tail light") ||
                 label.contains("trunk") ||
                 label.contains("rear") {
-                return ("Rear Bumper Damage", max(observation.confidence, 0.72))
+                return ("Rear Bumper Dent", max(observation.confidence, 0.72))
             }
 
             if label.contains("grille") ||
                 label.contains("radiator") ||
                 label.contains("headlight") ||
                 label.contains("headlamp") {
-                return ("Front Bumper Damage", max(observation.confidence, 0.72))
+                return ("Front Fender Damage", max(observation.confidence, 0.72))
             }
 
             if label.contains("door") ||
@@ -291,7 +291,7 @@ class DamageDetectionService: ObservableObject {
                 label.contains("mirror") ||
                 label.contains("handle") ||
                 label.contains("fender") {
-                return ("Side Door Damage", max(observation.confidence, 0.68))
+                return ("Side Door Dent", max(observation.confidence, 0.68))
             }
 
             if label.contains("bumper") {
@@ -330,9 +330,15 @@ class DamageDetectionService: ObservableObject {
 
         let locationSensitiveMatches = [
             "Side Door Damage",
+            "Side Door Dent",
             "Front Bumper Damage",
+            "Front Fender Damage",
             "Headlight Damage",
             "Bumper Damage",
+            "Rear Bumper Damage",
+            "Rear Bumper Dent",
+            "Rear Bumper Crack",
+            "Rear Quarter Panel Damage",
             "Body Dent",
             "Visible Vehicle Body Damage"
         ]
@@ -463,49 +469,61 @@ class DamageDetectionService: ObservableObject {
         let upperDarkRatio = Double(upperDarkPixelCount) / Double(width * height)
         let centerPanelRatio = Double(centerPanelPixelCount) / Double(max(centerBandPixelCount, 1))
 
+        if fullRedRatio > 0.012 &&
+            fullRedRatio < 0.22 &&
+            darkGapRatio > 0.055 {
+            return ("Rear Quarter Panel Damage", 0.86)
+        }
+
+        if fullRedRatio > 0.012 &&
+            fullRedRatio < 0.22 &&
+            scuffRatio > 0.12 {
+            return ("Rear Bumper Crack", 0.84)
+        }
+
         if redRatio > 0.004 &&
             redRatio < 0.18 &&
             panelRatio > 0.08 &&
             scuffRatio > 0.03 {
-            return ("Rear Bumper Damage", 0.78)
+            return ("Rear Bumper Dent", 0.78)
         }
 
         if redRatio > 0.008 &&
             redRatio < 0.18 &&
             panelRatio > 0.12 {
-            return ("Rear Bumper Damage", 0.70)
+            return ("Rear Bumper Dent", 0.70)
         }
 
         if fullRedRatio > 0.012 &&
             fullRedRatio < 0.22 &&
             panelRatio > 0.08 &&
             brightLampRatio > 0.006 {
-            return ("Rear Bumper Damage", 0.82)
+            return ("Rear Bumper Dent", 0.82)
         }
 
         if fullRedRatio > 0.006 &&
             fullRedRatio < 0.16 &&
             brightLampRatio > 0.012 &&
             upperDarkRatio > 0.02 {
-            return ("Rear Bumper Damage", 0.76)
+            return ("Rear Bumper Dent", 0.76)
         }
 
         if brightLampRatio > 0.045 &&
             fullRedRatio < 0.012 &&
             darkGapRatio > 0.025 {
-            return ("Front Bumper Damage", 0.82)
+            return ("Front Fender Damage", 0.82)
         }
 
         if brightLampRatio > 0.055 &&
             fullRedRatio < 0.012 &&
             upperDarkRatio < 0.08 {
-            return ("Front Bumper Damage", 0.78)
+            return ("Front Fender Damage", 0.78)
         }
 
         if centerPanelRatio > 0.42 &&
             upperDarkRatio > 0.035 &&
             (fullRedRatio > 0.18 || brightLampRatio < 0.07) {
-            return ("Side Door Damage", 0.76)
+            return ("Side Door Dent", 0.76)
         }
 
         return nil
@@ -666,12 +684,22 @@ class DamageDetectionService: ObservableObject {
             return confidence >= 0.75 ? ("Medium", "$200 - $450") : ("Low", "$120 - $250")
         case "Front Bumper Damage":
             return confidence >= 0.75 ? ("High", "$450 - $700") : ("Medium", "$250 - $500")
+        case "Front Fender Damage":
+            return confidence >= 0.75 ? ("High", "$650 - $1,400") : ("Medium", "$400 - $900")
+        case "Rear Bumper Dent":
+            return confidence >= 0.75 ? ("Medium", "$250 - $650") : ("Low", "$150 - $400")
+        case "Rear Bumper Crack":
+            return confidence >= 0.75 ? ("High", "$500 - $1,200") : ("Medium", "$350 - $800")
+        case "Rear Quarter Panel Damage":
+            return confidence >= 0.75 ? ("High", "$700 - $1,800") : ("Medium", "$450 - $1,000")
         case "Rear Bumper Damage":
             return confidence >= 0.75 ? ("High", "$450 - $900") : ("Medium", "$300 - $700")
         case "Bumper Damage":
             return confidence >= 0.75 ? ("High", "$400 - $800") : ("Medium", "$250 - $600")
         case "Side Door Damage":
             return confidence >= 0.75 ? ("High", "$500 - $1,200") : ("Medium", "$300 - $800")
+        case "Side Door Dent":
+            return confidence >= 0.75 ? ("Medium", "$350 - $900") : ("Low", "$180 - $450")
         case "Paint Scratch":
             return ("Low", "$80 - $180")
         case "Body Dent":
@@ -753,6 +781,38 @@ class DamageDetectionService: ObservableObject {
                 "High",
                 "98%",
                 "$450 - $700"
+            )
+
+        case "Front Fender Damage":
+            return (
+                "Front Fender Damage",
+                "High",
+                "92%",
+                "$650 - $1,400"
+            )
+
+        case "Rear Bumper Dent":
+            return (
+                "Rear Bumper Dent",
+                "Medium",
+                "90%",
+                "$250 - $650"
+            )
+
+        case "Rear Bumper Crack":
+            return (
+                "Rear Bumper Crack",
+                "High",
+                "91%",
+                "$500 - $1,200"
+            )
+
+        case "Rear Quarter Panel Damage":
+            return (
+                "Rear Quarter Panel Damage",
+                "High",
+                "89%",
+                "$700 - $1,800"
             )
 
         case "Rear Bumper Damage":
