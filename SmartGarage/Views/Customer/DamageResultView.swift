@@ -226,7 +226,7 @@ struct DamageResultView: View {
         case "Headlight Damage":
             return "Front lighting unit damage detected. Replacement may be required."
         case "Front Bumper Damage":
-            return "Front bumper impact damage detected with structural deformation."
+            return "Front bumper, fender, or headlight-area impact damage detected with visible deformation. Bumper, fender, lamp, and paint repair may be required."
         case "Rear Bumper Damage":
             return "Rear bumper or rear-quarter panel damage detected with visible denting, scuffing, or scrape marks. Bumper, tail light, and paint repair may be required."
         case "Bumper Damage":

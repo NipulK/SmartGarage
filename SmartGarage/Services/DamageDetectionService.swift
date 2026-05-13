@@ -37,7 +37,9 @@ class DamageDetectionService: ObservableObject {
             return
         }
 
-        guard let ciImage = CIImage(image: image) else {
+        let analysisImage = croppedDamagePhoto(from: image)
+
+        guard let ciImage = CIImage(image: analysisImage) else {
 
             errorMessage = "Invalid image."
             completion(false)
@@ -63,7 +65,7 @@ class DamageDetectionService: ObservableObject {
                         print("AI Prediction:", firstResult.identifier)
                         print("AI Confidence:", firstResult.confidence)
                         
-                        let analysis = self.detectDamage(from: results, image: image)
+                        let analysis = self.detectDamage(from: results, image: analysisImage)
                         let confidenceValue = Int(analysis.confidence * 100)
 
                         self.damageType = analysis.damageType
@@ -329,6 +331,7 @@ class DamageDetectionService: ObservableObject {
         let locationSensitiveMatches = [
             "Side Door Damage",
             "Front Bumper Damage",
+            "Headlight Damage",
             "Bumper Damage",
             "Body Dent",
             "Visible Vehicle Body Damage"
@@ -350,29 +353,47 @@ class DamageDetectionService: ObservableObject {
         category: String,
         confidence: Float
     )? {
-        guard let pixelData = resizedPixelData(for: image, width: 160, height: 120) else {
+        guard let pixelData = resizedPixelData(for: image, width: 180, height: 120) else {
             return nil
         }
 
         let width = pixelData.width
         let height = pixelData.height
+        var rearRedPixelCount = 0
         var redPixelCount = 0
+        var brightLampPixelCount = 0
+        var darkGapPixelCount = 0
+        var upperDarkPixelCount = 0
         var panelPixelCount = 0
         var scuffPixelCount = 0
+        var centerBandPixelCount = 0
+        var centerPanelPixelCount = 0
         var lowerPixelCount = 0
 
-        for y in Int(Double(height) * 0.25)..<height {
+        for y in 0..<height {
             for x in 0..<width {
                 let index = ((y * width) + x) * 4
                 let red = Int(pixelData.bytes[index])
                 let green = Int(pixelData.bytes[index + 1])
                 let blue = Int(pixelData.bytes[index + 2])
-
-                lowerPixelCount += 1
+                let maximum = max(red, green, blue)
+                let minimum = min(red, green, blue)
+                let saturation = maximum - minimum
 
                 let isTailLightRed = red > 120 &&
                     red > Int(Double(green) * 1.35) &&
                     red > Int(Double(blue) * 1.35)
+                let isRearLampOrange = red > 145 &&
+                    green > 70 &&
+                    green < 170 &&
+                    blue < 120 &&
+                    red > green
+                let isBrightLampOrChrome = red > 150 &&
+                    green > 150 &&
+                    blue > 145 &&
+                    saturation < 70
+                let isDarkGap = maximum < 55
+                let isUpperWindowOrShadow = maximum < 95 && y < Int(Double(height) * 0.42)
                 let isLightRearPanel = red > 145 &&
                     green > 145 &&
                     blue > 135 &&
@@ -384,16 +405,47 @@ class DamageDetectionService: ObservableObject {
                     abs(red - green) < 35 &&
                     abs(green - blue) < 35
 
-                if isTailLightRed {
+                if isTailLightRed || isRearLampOrange {
                     redPixelCount += 1
                 }
 
-                if isLightRearPanel {
-                    panelPixelCount += 1
+                if isBrightLampOrChrome && y < Int(Double(height) * 0.65) {
+                    brightLampPixelCount += 1
                 }
 
-                if isScuffedDarkOrGray {
-                    scuffPixelCount += 1
+                if isDarkGap && y > Int(Double(height) * 0.28) {
+                    darkGapPixelCount += 1
+                }
+
+                if isUpperWindowOrShadow {
+                    upperDarkPixelCount += 1
+                }
+
+                if y >= Int(Double(height) * 0.25) {
+                    lowerPixelCount += 1
+
+                    if isTailLightRed || isRearLampOrange {
+                        rearRedPixelCount += 1
+                    }
+
+                    if isLightRearPanel {
+                        panelPixelCount += 1
+                    }
+
+                    if isScuffedDarkOrGray {
+                        scuffPixelCount += 1
+                    }
+                }
+
+                if x > Int(Double(width) * 0.18) &&
+                    x < Int(Double(width) * 0.82) &&
+                    y > Int(Double(height) * 0.34) &&
+                    y < Int(Double(height) * 0.86) {
+                    centerBandPixelCount += 1
+
+                    if maximum > 70 && maximum < 245 {
+                        centerPanelPixelCount += 1
+                    }
                 }
             }
         }
@@ -402,9 +454,14 @@ class DamageDetectionService: ObservableObject {
             return nil
         }
 
-        let redRatio = Double(redPixelCount) / Double(lowerPixelCount)
+        let redRatio = Double(rearRedPixelCount) / Double(lowerPixelCount)
+        let fullRedRatio = Double(redPixelCount) / Double(width * height)
         let panelRatio = Double(panelPixelCount) / Double(lowerPixelCount)
         let scuffRatio = Double(scuffPixelCount) / Double(lowerPixelCount)
+        let brightLampRatio = Double(brightLampPixelCount) / Double(width * height)
+        let darkGapRatio = Double(darkGapPixelCount) / Double(width * height)
+        let upperDarkRatio = Double(upperDarkPixelCount) / Double(width * height)
+        let centerPanelRatio = Double(centerPanelPixelCount) / Double(max(centerBandPixelCount, 1))
 
         if redRatio > 0.004 &&
             redRatio < 0.18 &&
@@ -419,7 +476,133 @@ class DamageDetectionService: ObservableObject {
             return ("Rear Bumper Damage", 0.70)
         }
 
+        if fullRedRatio > 0.006 &&
+            fullRedRatio < 0.16 &&
+            brightLampRatio > 0.012 &&
+            upperDarkRatio > 0.02 {
+            return ("Rear Bumper Damage", 0.76)
+        }
+
+        if brightLampRatio > 0.045 &&
+            darkGapRatio > 0.025 {
+            return ("Front Bumper Damage", 0.82)
+        }
+
+        if brightLampRatio > 0.055 &&
+            upperDarkRatio < 0.08 {
+            return ("Front Bumper Damage", 0.78)
+        }
+
+        if centerPanelRatio > 0.42 &&
+            upperDarkRatio > 0.035 &&
+            (fullRedRatio > 0.18 || brightLampRatio < 0.07) {
+            return ("Side Door Damage", 0.76)
+        }
+
         return nil
+    }
+
+    private func croppedDamagePhoto(from image: UIImage) -> UIImage {
+        guard let pixelData = resizedPixelData(for: image, width: 120, height: 180) else {
+            return image
+        }
+
+        let width = pixelData.width
+        let height = pixelData.height
+        var rowScores = [Double](repeating: 0, count: height)
+
+        for y in 0..<height {
+            var contentPixels = 0
+
+            for x in 0..<width {
+                let index = ((y * width) + x) * 4
+                let red = Int(pixelData.bytes[index])
+                let green = Int(pixelData.bytes[index + 1])
+                let blue = Int(pixelData.bytes[index + 2])
+                let maximum = max(red, green, blue)
+                let minimum = min(red, green, blue)
+                let saturation = maximum - minimum
+                let isWhiteBackground = red > 235 && green > 235 && blue > 235 && saturation < 18
+
+                if !isWhiteBackground {
+                    contentPixels += 1
+                }
+            }
+
+            rowScores[y] = Double(contentPixels) / Double(width)
+        }
+
+        var bestStart = 0
+        var bestEnd = height - 1
+        var bestScore = 0.0
+        var currentStart: Int?
+        var currentScore = 0.0
+
+        for y in 0..<height {
+            if rowScores[y] > 0.18 {
+                if currentStart == nil {
+                    currentStart = y
+                    currentScore = 0
+                }
+
+                currentScore += rowScores[y]
+            } else if let start = currentStart {
+                let end = y - 1
+                let groupHeight = end - start + 1
+                let groupScore = currentScore * Double(groupHeight)
+
+                if groupHeight > 12 && groupScore > bestScore {
+                    bestScore = groupScore
+                    bestStart = start
+                    bestEnd = end
+                }
+
+                currentStart = nil
+            }
+        }
+
+        if let start = currentStart {
+            let end = height - 1
+            let groupHeight = end - start + 1
+            let groupScore = currentScore * Double(groupHeight)
+
+            if groupHeight > 12 && groupScore > bestScore {
+                bestStart = start
+                bestEnd = end
+            }
+        }
+
+        let cropHeightRatio = Double(bestEnd - bestStart + 1) / Double(height)
+        guard cropHeightRatio < 0.82 else {
+            return image
+        }
+
+        let verticalPadding = max(2, Int(Double(height) * 0.02))
+        let paddedStart = max(0, bestStart - verticalPadding)
+        let paddedEnd = min(height - 1, bestEnd + verticalPadding)
+        let cropY = image.size.height * CGFloat(paddedStart) / CGFloat(height)
+        let cropHeight = image.size.height * CGFloat(paddedEnd - paddedStart + 1) / CGFloat(height)
+
+        guard cropHeight > image.size.height * 0.15 else {
+            return image
+        }
+
+        let cropRect = CGRect(
+            x: 0,
+            y: cropY,
+            width: image.size.width,
+            height: cropHeight
+        )
+
+        let renderer = UIGraphicsImageRenderer(size: cropRect.size)
+        return renderer.image { _ in
+            image.draw(
+                at: CGPoint(
+                    x: -cropRect.origin.x,
+                    y: -cropRect.origin.y
+                )
+            )
+        }
     }
 
     private func resizedPixelData(
