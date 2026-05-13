@@ -177,6 +177,39 @@ class BookingService: ObservableObject {
             }
     }
 
+    func fetchCustomerName(
+        userId: String,
+        completion: @escaping (String) -> Void
+    ) {
+
+        db.collection("users")
+            .document(userId)
+            .getDocument { snapshot, error in
+
+                DispatchQueue.main.async {
+                    if let error = error {
+                        self.errorMessage = error.localizedDescription
+                        completion("Customer")
+                        return
+                    }
+
+                    let data = snapshot?.data()
+                    let fullName = data?["fullName"] as? String
+                    let username = data?["username"] as? String
+
+                    if let fullName,
+                       !fullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        completion(fullName)
+                    } else if let username,
+                              !username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        completion(username)
+                    } else {
+                        completion("Customer")
+                    }
+                }
+            }
+    }
+
     func updateBookingStatus(
         bookingId: String,
         status: String,
