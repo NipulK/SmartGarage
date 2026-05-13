@@ -227,12 +227,18 @@ struct DamageResultView: View {
             return "Front lighting unit damage detected. Replacement may be required."
         case "Front Bumper Damage":
             return "Front bumper impact damage detected with structural deformation."
+        case "Rear Bumper Damage":
+            return "Rear bumper or rear-quarter panel damage detected with visible denting, scuffing, or scrape marks. Bumper, tail light, and paint repair may be required."
+        case "Bumper Damage":
+            return "Bumper impact damage detected. The exact front or rear location should be confirmed during inspection."
         case "Side Door Damage":
             return "Side door/body panel damage detected with visible denting and scrape marks. Door shell and paint repair may be required."
         case "Windshield Crack":
             return "Windshield crack detected. Visibility and safety may be affected."
         case "Damage Not Clearly Classified":
             return "The uploaded photo was analyzed, but the model could not confidently identify a specific damage type. A clearer damage-focused photo or a damage-trained model is needed."
+        case "Visible Vehicle Body Damage":
+            return "Vehicle body damage is visible in the uploaded photo, but the exact damaged panel could not be classified confidently. Manual inspection is recommended."
         default:
             return "Vehicle damage detected by AI analysis."
         }
@@ -328,10 +334,10 @@ struct ResultBox: View {
     NavigationStack {
         DamageResultView(
             selectedTab: .constant(2),
-            damageType: "Front Bumper Damage",
+            damageType: "Rear Bumper Damage",
             severity: "High",
             confidence: "98%",
-            estimatedCost: "$450 - $600",
+            estimatedCost: "$450 - $900",
             vehicleName: "Toyota Yaris",
             selectedImage: nil
         )

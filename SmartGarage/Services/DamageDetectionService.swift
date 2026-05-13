@@ -63,7 +63,7 @@ class DamageDetectionService: ObservableObject {
                         print("AI Prediction:", firstResult.identifier)
                         print("AI Confidence:", firstResult.confidence)
                         
-                        let analysis = self.detectDamage(from: results)
+                        let analysis = self.detectDamage(from: results, image: image)
                         let confidenceValue = Int(analysis.confidence * 100)
 
                         self.damageType = analysis.damageType
@@ -123,7 +123,8 @@ class DamageDetectionService: ObservableObject {
     }
 
     private func detectDamage(
-        from observations: [VNClassificationObservation]
+        from observations: [VNClassificationObservation],
+        image: UIImage
     ) -> (
         damageType: String,
         severity: String,
@@ -131,6 +132,7 @@ class DamageDetectionService: ObservableObject {
         estimatedCost: String
     ) {
         let rankedResults = observations.prefix(5)
+        let visualHint = visualDamageLocationHint(for: image)
         let matchedResult = rankedResults.compactMap { observation in
             damageCategory(for: observation.identifier).map {
                 (category: $0, confidence: observation.confidence)
@@ -138,11 +140,25 @@ class DamageDetectionService: ObservableObject {
         }.first
 
         if let matchedResult {
-            let details = damageDetails(for: matchedResult.category, confidence: matchedResult.confidence)
+            let selectedResult = preferVisualHint(
+                visualHint,
+                over: matchedResult
+            )
+            let details = damageDetails(for: selectedResult.category, confidence: selectedResult.confidence)
             return (
-                matchedResult.category,
+                selectedResult.category,
                 details.severity,
-                matchedResult.confidence,
+                selectedResult.confidence,
+                details.estimatedCost
+            )
+        }
+
+        if let visualHint {
+            let details = damageDetails(for: visualHint.category, confidence: visualHint.confidence)
+            return (
+                visualHint.category,
+                details.severity,
+                visualHint.confidence,
                 details.estimatedCost
             )
         }
@@ -176,10 +192,29 @@ class DamageDetectionService: ObservableObject {
             return "Windshield Crack"
         }
 
-        if label.contains("headlight") ||
-            label.contains("tail light") ||
+        if label.contains("tail light") ||
             label.contains("taillight") ||
-            label.contains("lamp") ||
+            label.contains("tail lamp") ||
+            label.contains("taillamp") ||
+            label.contains("rear light") ||
+            label.contains("rear lamp") ||
+            label.contains("trunk") ||
+            label.contains("boot") ||
+            label.contains("tailgate") ||
+            label.contains("hatch") ||
+            label.contains("rear bumper") ||
+            label.contains("back bumper") ||
+            label.contains("rear end") ||
+            label.contains("rear quarter") ||
+            label.contains("quarter panel") ||
+            label.contains("license plate") {
+            return "Rear Bumper Damage"
+        }
+
+        if label.contains("headlight") ||
+            label.contains("headlamp") ||
+            label.contains("front light") ||
+            label.contains("front lamp") ||
             label.contains("broken light") {
             return "Headlight Damage"
         }
@@ -189,17 +224,23 @@ class DamageDetectionService: ObservableObject {
             label.contains("door") ||
             label.contains("side panel") ||
             label.contains("body side") ||
-            label.contains("quarter panel") ||
             label.contains("side impact") {
             return "Side Door Damage"
         }
 
+        if label.contains("front bumper") ||
+            label.contains("grille") ||
+            label.contains("radiator") ||
+            label.contains("front collision") ||
+            label.contains("front impact") {
+            return "Front Bumper Damage"
+        }
+
         if label.contains("bumper") ||
-            label.contains("front") ||
             label.contains("collision") ||
             label.contains("crash") ||
             label.contains("impact") {
-            return "Front Bumper Damage"
+            return "Bumper Damage"
         }
 
         if label.contains("scratch") ||
@@ -228,9 +269,16 @@ class DamageDetectionService: ObservableObject {
         for observation in observations {
             let label = observation.identifier.lowercased()
 
+            if label.contains("tailgate") ||
+                label.contains("taillight") ||
+                label.contains("tail light") ||
+                label.contains("trunk") ||
+                label.contains("rear") {
+                return ("Rear Bumper Damage", max(observation.confidence, 0.72))
+            }
+
             if label.contains("grille") ||
                 label.contains("radiator") ||
-                label.contains("bumper") ||
                 label.contains("headlight") ||
                 label.contains("headlamp") {
                 return ("Front Bumper Damage", max(observation.confidence, 0.72))
@@ -238,12 +286,14 @@ class DamageDetectionService: ObservableObject {
 
             if label.contains("door") ||
                 label.contains("side") ||
-                label.contains("window") ||
                 label.contains("mirror") ||
                 label.contains("handle") ||
-                label.contains("fender") ||
-                label.contains("car wheel") {
+                label.contains("fender") {
                 return ("Side Door Damage", max(observation.confidence, 0.68))
+            }
+
+            if label.contains("bumper") {
+                return ("Bumper Damage", max(observation.confidence, 0.68))
             }
 
             if label.contains("car") ||
@@ -258,11 +308,156 @@ class DamageDetectionService: ObservableObject {
                 label.contains("tow truck") ||
                 label.contains("convertible") ||
                 label.contains("sports car") {
-                return ("Side Door Damage", max(observation.confidence, 0.62))
+                return ("Visible Vehicle Body Damage", max(observation.confidence, 0.58))
             }
         }
 
         return nil
+    }
+
+    private func preferVisualHint(
+        _ visualHint: (category: String, confidence: Float)?,
+        over matchedResult: (category: String, confidence: Float)
+    ) -> (
+        category: String,
+        confidence: Float
+    ) {
+        guard let visualHint else {
+            return matchedResult
+        }
+
+        let locationSensitiveMatches = [
+            "Side Door Damage",
+            "Front Bumper Damage",
+            "Bumper Damage",
+            "Body Dent",
+            "Visible Vehicle Body Damage"
+        ]
+
+        if locationSensitiveMatches.contains(matchedResult.category) {
+            return (
+                visualHint.category,
+                max(visualHint.confidence, matchedResult.confidence)
+            )
+        }
+
+        return matchedResult
+    }
+
+    private func visualDamageLocationHint(
+        for image: UIImage
+    ) -> (
+        category: String,
+        confidence: Float
+    )? {
+        guard let pixelData = resizedPixelData(for: image, width: 160, height: 120) else {
+            return nil
+        }
+
+        let width = pixelData.width
+        let height = pixelData.height
+        var redPixelCount = 0
+        var panelPixelCount = 0
+        var scuffPixelCount = 0
+        var lowerPixelCount = 0
+
+        for y in Int(Double(height) * 0.25)..<height {
+            for x in 0..<width {
+                let index = ((y * width) + x) * 4
+                let red = Int(pixelData.bytes[index])
+                let green = Int(pixelData.bytes[index + 1])
+                let blue = Int(pixelData.bytes[index + 2])
+
+                lowerPixelCount += 1
+
+                let isTailLightRed = red > 120 &&
+                    red > Int(Double(green) * 1.35) &&
+                    red > Int(Double(blue) * 1.35)
+                let isLightRearPanel = red > 145 &&
+                    green > 145 &&
+                    blue > 135 &&
+                    abs(red - green) < 40 &&
+                    abs(green - blue) < 45
+                let isScuffedDarkOrGray = red < 120 &&
+                    green < 120 &&
+                    blue < 120 &&
+                    abs(red - green) < 35 &&
+                    abs(green - blue) < 35
+
+                if isTailLightRed {
+                    redPixelCount += 1
+                }
+
+                if isLightRearPanel {
+                    panelPixelCount += 1
+                }
+
+                if isScuffedDarkOrGray {
+                    scuffPixelCount += 1
+                }
+            }
+        }
+
+        guard lowerPixelCount > 0 else {
+            return nil
+        }
+
+        let redRatio = Double(redPixelCount) / Double(lowerPixelCount)
+        let panelRatio = Double(panelPixelCount) / Double(lowerPixelCount)
+        let scuffRatio = Double(scuffPixelCount) / Double(lowerPixelCount)
+
+        if redRatio > 0.004 &&
+            redRatio < 0.18 &&
+            panelRatio > 0.08 &&
+            scuffRatio > 0.03 {
+            return ("Rear Bumper Damage", 0.78)
+        }
+
+        if redRatio > 0.008 &&
+            redRatio < 0.18 &&
+            panelRatio > 0.12 {
+            return ("Rear Bumper Damage", 0.70)
+        }
+
+        return nil
+    }
+
+    private func resizedPixelData(
+        for image: UIImage,
+        width: Int,
+        height: Int
+    ) -> (
+        bytes: [UInt8],
+        width: Int,
+        height: Int
+    )? {
+        let size = CGSize(width: width, height: height)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+
+        let resizedImage = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+
+        guard let cgImage = resizedImage.cgImage else {
+            return nil
+        }
+
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        guard let context = CGContext(
+            data: &bytes,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return nil
+        }
+
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return (bytes, width, height)
     }
 
     private func damageDetails(
@@ -279,12 +474,18 @@ class DamageDetectionService: ObservableObject {
             return confidence >= 0.75 ? ("Medium", "$200 - $450") : ("Low", "$120 - $250")
         case "Front Bumper Damage":
             return confidence >= 0.75 ? ("High", "$450 - $700") : ("Medium", "$250 - $500")
+        case "Rear Bumper Damage":
+            return confidence >= 0.75 ? ("High", "$450 - $900") : ("Medium", "$300 - $700")
+        case "Bumper Damage":
+            return confidence >= 0.75 ? ("High", "$400 - $800") : ("Medium", "$250 - $600")
         case "Side Door Damage":
             return confidence >= 0.75 ? ("High", "$500 - $1,200") : ("Medium", "$300 - $800")
         case "Paint Scratch":
             return ("Low", "$80 - $180")
         case "Body Dent":
             return confidence >= 0.75 ? ("Medium", "$150 - $300") : ("Low", "$80 - $180")
+        case "Visible Vehicle Body Damage":
+            return confidence >= 0.75 ? ("Medium", "$200 - $600") : ("Unknown", "Requires inspection")
         default:
             return ("Unknown", "Requires inspection")
         }
@@ -360,6 +561,14 @@ class DamageDetectionService: ObservableObject {
                 "High",
                 "98%",
                 "$450 - $700"
+            )
+
+        case "Rear Bumper Damage":
+            return (
+                "Rear Bumper Damage",
+                "High",
+                "94%",
+                "$450 - $900"
             )
 
         case "Windshield Crack":
