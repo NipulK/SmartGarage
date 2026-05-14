@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CustomerActivityView: View {
 
+    var showsTopBarBackButton = true
     var onLogoutRequested: () -> Void = { }
 
     @StateObject private var bookingService = BookingService()
@@ -13,7 +14,10 @@ struct CustomerActivityView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
-                    CustomerTopBar(onBack: onLogoutRequested) {
+                    CustomerTopBar(
+                        onBack: onLogoutRequested,
+                        showsBackButton: showsTopBarBackButton
+                    ) {
                         NavigationLink {
                             CustomerProfileView {
                                 onLogoutRequested()

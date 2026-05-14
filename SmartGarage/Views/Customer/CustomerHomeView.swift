@@ -215,7 +215,9 @@ struct CustomerHomeView: View {
 
                         NavigationLink {
 
-                            CustomerActivityView {
+                            CustomerActivityView(
+                                showsTopBarBackButton: false
+                            ) {
                                 onLogoutRequested()
                             }
 
