@@ -12,9 +12,9 @@ struct CustomerHomeView: View {
 
     @State private var selectedBooking: Booking?
     @State private var showChat = false
+    @State private var showNotifications = false
     @State private var activePopup: AppNotification?
     @State private var customerName = "Customer"
-
     @State private var selectedVehicle: Vehicle?
 
     var latestActiveBooking: Booking? {
@@ -32,8 +32,8 @@ struct CustomerHomeView: View {
                         onBack: onLogoutRequested,
                         showsBackButton: showsTopBarBackButton
                     ) {
-                        NavigationLink {
-                            NotificationListView(userRole: "customer")
+                        Button {
+                            showNotifications = true
                         } label: {
                             ZStack(alignment: .topTrailing) {
                                 Image(systemName: "bell")
@@ -47,6 +47,7 @@ struct CustomerHomeView: View {
                                 }
                             }
                         }
+                        .buttonStyle(.plain)
 
                         NavigationLink {
                             CustomerProfileView(
@@ -201,6 +202,9 @@ struct CustomerHomeView: View {
                     senderName: "Customer"
                 )
             }
+        }
+        .navigationDestination(isPresented: $showNotifications) {
+            NotificationListView(userRole: "customer")
         }
         .sheet(item: $selectedVehicle) { vehicle in
             VehicleDetailsPopup(vehicle: vehicle)

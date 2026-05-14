@@ -4,6 +4,7 @@ import FirebaseAuth
 struct CustomerMainView: View {
 
     @Binding var isCustomerLoggedIn: Bool
+
     @State private var selectedTab = 0
     @State private var showLogoutConfirmation = false
     @State private var logoutErrorMessage = ""
