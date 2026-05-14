@@ -221,11 +221,14 @@ struct CustomerBookingView: View {
                 selectedVehicle = firstVehicle.id ?? ""
             }
         }
+        
         .alert("Booking Confirmed", isPresented: $showBookingAlert) {
             Button("OK") {
-                selectedTab = 0
+                withAnimation {
+                    selectedTab = 3   // 👉 Activity tab
+                }
                 onBookingConfirmed()
-                dismiss()
+                // ❌ DO NOT use dismiss()
             }
         } message: {
             Text(bookingSummary)

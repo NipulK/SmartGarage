@@ -70,8 +70,9 @@ struct DamageResultView: View {
                             preselectedService: "Damage Repair - \(damageType)",
                             showsTopBarBackButton: false,
                             onBookingConfirmed: {
-                                selectedTab = 0
-                                dismiss()
+
+                                selectedTab = 3   // 👉 Activity page
+
                             }
                         )
                     } label: {
@@ -105,13 +106,11 @@ struct DamageResultView: View {
         .background(Color(.systemGroupedBackground))
         .alert("Saved for Later", isPresented: $showSavedAlert) {
             Button("View Activity") {
-                selectedTab = 3
-                dismiss()
+                selectedTab = 3   // Activity
             }
 
             Button("OK", role: .cancel) {
-                selectedTab = 0
-                dismiss()
+                selectedTab = 0   // Home (or keep 3 if you want)
             }
         } message: {
             Text("Your damage report has been saved. You can view it in the Activity page.")
