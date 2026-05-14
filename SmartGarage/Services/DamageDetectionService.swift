@@ -738,6 +738,28 @@ class DamageDetectionService: ObservableObject {
             }
     }
 
+    func deleteDamageReport(
+        reportId: String,
+        completion: @escaping (Bool) -> Void
+    ) {
+
+        errorMessage = ""
+
+        db.collection("damageReports")
+            .document(reportId)
+            .delete { error in
+
+                DispatchQueue.main.async {
+                    if let error = error {
+                        self.errorMessage = error.localizedDescription
+                        completion(false)
+                    } else {
+                        completion(true)
+                    }
+                }
+            }
+    }
+
     // MARK: - GENERATE RESULT
 
     private func generateDamageResult(

@@ -4,6 +4,7 @@ struct CustomerActivityView: View {
 
     @StateObject private var bookingService = BookingService()
     @StateObject private var damageService = DamageDetectionService()
+    @State private var reportToDelete: DamageReport?
 
     var body: some View {
         NavigationStack {
@@ -79,7 +80,9 @@ struct CustomerActivityView: View {
 
                     } else {
                         ForEach(damageService.damageReports) { report in
-                            DamageReportCard(report: report)
+                            DamageReportCard(report: report) {
+                                reportToDelete = report
+                            }
                         }
                     }
 
@@ -95,6 +98,38 @@ struct CustomerActivityView: View {
             .onAppear {
                 bookingService.fetchBookings()
                 damageService.fetchDamageReports()
+            }
+            .alert("Delete Damage Report?", isPresented: deleteConfirmationBinding) {
+                Button("Cancel", role: .cancel) {
+                    reportToDelete = nil
+                }
+
+                Button("Delete", role: .destructive) {
+                    deleteSelectedReport()
+                }
+            } message: {
+                Text("This saved damage report will be removed from your history.")
+            }
+        }
+    }
+
+    private var deleteConfirmationBinding: Binding<Bool> {
+        Binding(
+            get: { reportToDelete != nil },
+            set: { if !$0 { reportToDelete = nil } }
+        )
+    }
+
+    private func deleteSelectedReport() {
+        guard let reportId = reportToDelete?.id else {
+            reportToDelete = nil
+            damageService.errorMessage = "Damage report ID not found."
+            return
+        }
+
+        damageService.deleteDamageReport(reportId: reportId) { success in
+            if success {
+                reportToDelete = nil
             }
         }
     }
@@ -179,6 +214,7 @@ struct ActivityCard: View {
 
 struct DamageReportCard: View {
     let report: DamageReport
+    let onDelete: () -> Void
 
     var body: some View {
         HStack(spacing: 14) {
@@ -204,14 +240,28 @@ struct DamageReportCard: View {
 
             Spacer()
 
-            Text(report.severity.uppercased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(report.severity.lowercased() == "high" ? .red : .orange)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(Color.orange.opacity(0.12))
-                .cornerRadius(8)
+            VStack(alignment: .trailing, spacing: 10) {
+                Text(report.severity.uppercased())
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(report.severity.lowercased() == "high" ? .red : .orange)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(Color.orange.opacity(0.12))
+                    .cornerRadius(8)
+
+                Button {
+                    onDelete()
+                } label: {
+                    Image(systemName: "trash.fill")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .frame(width: 34, height: 34)
+                        .background(Color.red.opacity(0.1))
+                        .clipShape(Circle())
+                }
+                .accessibilityLabel("Delete damage report")
+            }
         }
         .padding()
         .background(Color.white)
