@@ -50,25 +50,23 @@ struct LoginView: View {
                     .padding(.horizontal)
             }
             
-            if isLoginReady {
-                Button {
-                    login()
-                } label: {
-                    if authVM.isLoading {
-                        ProgressView()
-                    } else {
-                        Text("Login")
-                            .fontWeight(.bold)
-                    }
+            Button {
+                login()
+            } label: {
+                if authVM.isLoading {
+                    ProgressView()
+                } else {
+                    Text("Login")
+                        .fontWeight(.bold)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .padding(.horizontal)
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(isLoginReady ? Color.blue : Color.gray.opacity(0.45))
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            .padding(.horizontal)
+            .disabled(!isLoginReady || authVM.isLoading)
             
             Spacer()
             
