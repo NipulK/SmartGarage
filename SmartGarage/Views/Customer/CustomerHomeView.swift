@@ -2,6 +2,8 @@ import SwiftUI
 
 struct CustomerHomeView: View {
 
+    var onLogoutRequested: () -> Void = { }
+
     @StateObject private var vehicleService = VehicleService()
     @StateObject private var bookingService = BookingService()
     @StateObject private var notificationService = AppNotificationService()
@@ -59,7 +61,9 @@ struct CustomerHomeView: View {
 
                         NavigationLink {
 
-                            CustomerProfileView()
+                            CustomerProfileView {
+                                onLogoutRequested()
+                            }
 
                         } label: {
 

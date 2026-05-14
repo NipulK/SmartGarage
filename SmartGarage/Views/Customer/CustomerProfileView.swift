@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CustomerProfileView: View {
     @State private var darkMode = false
+    var onLogoutRequested: () -> Void = { }
 
     var body: some View {
         NavigationStack {
@@ -73,7 +74,7 @@ struct CustomerProfileView: View {
                     .cornerRadius(18)
 
                     Button {
-                        print("Logout")
+                        onLogoutRequested()
                     } label: {
                         Text("Logout")
                             .fontWeight(.bold)
