@@ -8,6 +8,7 @@ struct CustomerActivityView: View {
     @StateObject private var bookingService = BookingService()
     @StateObject private var damageService = DamageDetectionService()
     @State private var reportToDelete: DamageReport?
+    @State private var reportForBooking: DamageReport?
 
     var body: some View {
         NavigationStack {
@@ -85,9 +86,15 @@ struct CustomerActivityView: View {
 
                     } else {
                         ForEach(damageService.damageReports) { report in
-                            DamageReportCard(report: report) {
-                                reportToDelete = report
-                            }
+                            DamageReportCard(
+                                report: report,
+                                onSelect: {
+                                    reportForBooking = report
+                                },
+                                onDelete: {
+                                    reportToDelete = report
+                                }
+                            )
                         }
                     }
 
@@ -100,6 +107,14 @@ struct CustomerActivityView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
+            .navigationDestination(item: $reportForBooking) { report in
+                CustomerBookingView(
+                    selectedTab: .constant(1),
+                    preselectedService: "Damage Repair - \(report.damageType)",
+                    preselectedVehicleId: report.vehicleId,
+                    onLogoutRequested: onLogoutRequested
+                )
+            }
             .onAppear {
                 bookingService.fetchBookings()
                 damageService.fetchDamageReports()
@@ -219,54 +234,65 @@ struct ActivityCard: View {
 
 struct DamageReportCard: View {
     let report: DamageReport
+    let onSelect: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(report.severity.lowercased() == "high" ? .red : .orange)
-                .frame(width: 42, height: 42)
-                .background(Color.orange.opacity(0.12))
-                .cornerRadius(12)
+            Button {
+                onSelect()
+            } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(report.severity.lowercased() == "high" ? .red : .orange)
+                        .frame(width: 42, height: 42)
+                        .background(Color.orange.opacity(0.12))
+                        .cornerRadius(12)
 
-            VStack(alignment: .leading, spacing: 5) {
-                Text(report.damageType)
-                    .font(.headline)
-                    .foregroundColor(.black)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(report.damageType)
+                            .font(.headline)
+                            .foregroundColor(.black)
 
-                Text(report.vehicleName)
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                        Text(report.vehicleName)
+                            .font(.caption)
+                            .foregroundColor(.gray)
 
-                Text("Cost: \(report.estimatedCost)")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-            }
+                        Text("Cost: \(report.estimatedCost)")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
 
-            Spacer()
+                    Spacer()
 
-            VStack(alignment: .trailing, spacing: 10) {
-                Text(report.severity.uppercased())
-                    .font(.caption2)
-                    .fontWeight(.bold)
-                    .foregroundColor(report.severity.lowercased() == "high" ? .red : .orange)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background(Color.orange.opacity(0.12))
-                    .cornerRadius(8)
+                    VStack(alignment: .trailing, spacing: 8) {
+                        Text(report.severity.uppercased())
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(report.severity.lowercased() == "high" ? .red : .orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(Color.orange.opacity(0.12))
+                            .cornerRadius(8)
 
-                Button {
-                    onDelete()
-                } label: {
-                    Image(systemName: "trash.fill")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .frame(width: 34, height: 34)
-                        .background(Color.red.opacity(0.1))
-                        .clipShape(Circle())
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                    }
                 }
-                .accessibilityLabel("Delete damage report")
             }
+            .buttonStyle(.plain)
+
+            Button {
+                onDelete()
+            } label: {
+                Image(systemName: "trash.fill")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .frame(width: 34, height: 34)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+            }
+            .accessibilityLabel("Delete damage report")
         }
         .padding()
         .background(Color.white)

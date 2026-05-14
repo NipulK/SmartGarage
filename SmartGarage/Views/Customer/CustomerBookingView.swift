@@ -13,6 +13,7 @@ struct CustomerBookingView: View {
     @State private var selectedVehicle = ""
     @State private var selectedService: String
     @State private var selectedTime = "02:00 PM"
+    private let preselectedVehicleId: String?
 
     @State private var calendarMessage = ""
     @State private var selectedDate = Date()
@@ -45,10 +46,12 @@ struct CustomerBookingView: View {
     init(
         selectedTab: Binding<Int> = .constant(1),
         preselectedService: String = "Full System Diagnostic",
+        preselectedVehicleId: String? = nil,
         onLogoutRequested: @escaping () -> Void = { }
     ) {
         self._selectedTab = selectedTab
         self._selectedService = State(initialValue: preselectedService)
+        self.preselectedVehicleId = preselectedVehicleId
         self.onLogoutRequested = onLogoutRequested
     }
 
@@ -197,8 +200,14 @@ struct CustomerBookingView: View {
             vehicleService.fetchVehicles()
         }
         .onChange(of: vehicleService.vehicles.count) {
-            if selectedVehicle.isEmpty,
-               let firstVehicle = vehicleService.vehicles.first {
+            guard selectedVehicle.isEmpty else {
+                return
+            }
+
+            if let preselectedVehicleId,
+               vehicleService.vehicles.contains(where: { $0.id == preselectedVehicleId }) {
+                selectedVehicle = preselectedVehicleId
+            } else if let firstVehicle = vehicleService.vehicles.first {
                 selectedVehicle = firstVehicle.id ?? ""
             }
         }

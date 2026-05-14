@@ -2,7 +2,7 @@ import Foundation
 import FirebaseFirestore
 
 
-struct DamageReport: Identifiable, Codable {
+struct DamageReport: Identifiable, Codable, Hashable {
     @DocumentID var id: String?
     var userId: String
     var vehicleId: String
