@@ -20,15 +20,21 @@ struct CustomerMainView: View {
                 .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(0)
 
-            CustomerBookingView(selectedTab: $selectedTab)
+            CustomerBookingView(selectedTab: $selectedTab) {
+                showLogoutConfirmation = true
+            }
                 .tabItem { Label("Booking", systemImage: "wrench.fill") }
                 .tag(1)
 
-            CustomerGarageView(selectedTab: $selectedTab)
+            CustomerGarageView(selectedTab: $selectedTab) {
+                showLogoutConfirmation = true
+            }
                 .tabItem { Label("Garage", systemImage: "car.fill") }
                 .tag(2)
 
-            CustomerActivityView()
+            CustomerActivityView {
+                showLogoutConfirmation = true
+            }
                 .tabItem { Label("Activity", systemImage: "clock.fill") }
                 .tag(3)
 
@@ -39,23 +45,6 @@ struct CustomerMainView: View {
                 .tag(4)
         }
         .navigationBarBackButtonHidden(true)
-        .overlay(alignment: .topLeading) {
-            Button {
-                showLogoutConfirmation = true
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.black)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Back")
-            .padding(.leading, 16)
-            .padding(.top, 10)
-        }
         .alert("Logout Customer Account?", isPresented: $showLogoutConfirmation) {
             Button("Stay Logged In", role: .cancel) { }
 
@@ -89,4 +78,35 @@ struct CustomerMainView: View {
 
 #Preview {
     CustomerMainView()
+}
+
+struct CustomerTopBar<Trailing: View>: View {
+    let onBack: () -> Void
+    @ViewBuilder let trailing: () -> Trailing
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button {
+                onBack()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.black)
+                    .frame(width: 40, height: 40)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Back")
+
+            Text("SmartGarage")
+                .fontWeight(.bold)
+                .foregroundColor(.blue)
+
+            Spacer()
+
+            trailing()
+        }
+    }
 }

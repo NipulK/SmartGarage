@@ -3,9 +3,14 @@ import SwiftUI
 struct CustomerGarageView: View {
 
     @Binding var selectedTab: Int
+    var onLogoutRequested: () -> Void = { }
 
-    init(selectedTab: Binding<Int> = .constant(2)) {
+    init(
+        selectedTab: Binding<Int> = .constant(2),
+        onLogoutRequested: @escaping () -> Void = { }
+    ) {
         self._selectedTab = selectedTab
+        self.onLogoutRequested = onLogoutRequested
     }
 
     @StateObject private var vehicleService = VehicleService()
@@ -19,17 +24,16 @@ struct CustomerGarageView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
 
-                    HStack {
-                        Image(systemName: "line.3.horizontal")
-
-                        Text("SmartGarage")
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-
-                        Spacer()
-
-                        Image(systemName: "person.circle.fill")
-                            .font(.title2)
+                    CustomerTopBar(onBack: onLogoutRequested) {
+                        NavigationLink {
+                            CustomerProfileView {
+                                onLogoutRequested()
+                            }
+                        } label: {
+                            Image(systemName: "person.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.black)
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 6) {

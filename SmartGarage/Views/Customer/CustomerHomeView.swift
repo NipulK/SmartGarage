@@ -28,16 +28,7 @@ struct CustomerHomeView: View {
 
                 VStack(alignment: .leading, spacing: 22) {
 
-                    HStack {
-
-                        Image(systemName: "line.3.horizontal")
-
-                        Text("SmartGarage")
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-
-                        Spacer()
-
+                    CustomerTopBar(onBack: onLogoutRequested) {
                         NavigationLink {
 
                             NotificationListView(userRole: "customer")
@@ -205,7 +196,9 @@ struct CustomerHomeView: View {
 
                         NavigationLink {
 
-                            CustomerBookingView(selectedTab: .constant(1))
+                            CustomerBookingView(selectedTab: .constant(1)) {
+                                onLogoutRequested()
+                            }
 
                         } label: {
 
@@ -222,7 +215,9 @@ struct CustomerHomeView: View {
 
                         NavigationLink {
 
-                            CustomerActivityView()
+                            CustomerActivityView {
+                                onLogoutRequested()
+                            }
 
                         } label: {
 

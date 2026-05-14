@@ -2,6 +2,8 @@ import SwiftUI
 
 struct CustomerActivityView: View {
 
+    var onLogoutRequested: () -> Void = { }
+
     @StateObject private var bookingService = BookingService()
     @StateObject private var damageService = DamageDetectionService()
     @State private var reportToDelete: DamageReport?
@@ -11,17 +13,16 @@ struct CustomerActivityView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
-                    HStack {
-                        Image(systemName: "line.3.horizontal")
-
-                        Text("SmartGarage")
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-
-                        Spacer()
-
-                        Image(systemName: "person.circle.fill")
-                            .font(.title2)
+                    CustomerTopBar(onBack: onLogoutRequested) {
+                        NavigationLink {
+                            CustomerProfileView {
+                                onLogoutRequested()
+                            }
+                        } label: {
+                            Image(systemName: "person.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.black)
+                        }
                     }
 
                     Text("Activity")

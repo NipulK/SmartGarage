@@ -9,13 +9,14 @@ struct CustomerProfileView: View {
             ScrollView {
                 VStack(spacing: 22) {
 
-                    HStack {
-                        Image(systemName: "line.3.horizontal")
-                        Text("SmartGarage")
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        Spacer()
-                        Image(systemName: "bell")
+                    CustomerTopBar(onBack: onLogoutRequested) {
+                        NavigationLink {
+                            NotificationListView(userRole: "customer")
+                        } label: {
+                            Image(systemName: "bell")
+                                .font(.title3)
+                                .foregroundColor(.black)
+                        }
                     }
 
                     VStack(spacing: 10) {

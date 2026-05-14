@@ -3,6 +3,7 @@ import SwiftUI
 struct CustomerBookingView: View {
 
     @Binding var selectedTab: Int
+    var onLogoutRequested: () -> Void = { }
 
     @StateObject private var bookingService = BookingService()
     @StateObject private var vehicleService = VehicleService()
@@ -43,27 +44,28 @@ struct CustomerBookingView: View {
 
     init(
         selectedTab: Binding<Int> = .constant(1),
-        preselectedService: String = "Full System Diagnostic"
+        preselectedService: String = "Full System Diagnostic",
+        onLogoutRequested: @escaping () -> Void = { }
     ) {
         self._selectedTab = selectedTab
         self._selectedService = State(initialValue: preselectedService)
+        self.onLogoutRequested = onLogoutRequested
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
 
-                HStack {
-                    Image(systemName: "line.3.horizontal")
-
-                    Text("SmartGarage")
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-
-                    Spacer()
-
-                    Image(systemName: "person.circle.fill")
-                        .font(.title2)
+                CustomerTopBar(onBack: onLogoutRequested) {
+                    NavigationLink {
+                        CustomerProfileView {
+                            onLogoutRequested()
+                        }
+                    } label: {
+                        Image(systemName: "person.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.black)
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
