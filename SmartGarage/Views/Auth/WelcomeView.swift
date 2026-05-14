@@ -15,9 +15,11 @@ struct WelcomeView: View {
 
                     Spacer()
 
-                    Image(systemName: "car.fill")
-                        .font(.system(size: 40))
-                        .foregroundColor(.white)
+                    Image("1024")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 72, height: 72)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
                         .frame(width: 90, height: 90)
                         .background(Color.blue)
                         .cornerRadius(20)
@@ -68,4 +70,3 @@ struct WelcomeView: View {
         
     }
 }
-
