@@ -15,15 +15,17 @@ struct WelcomeView: View {
 
                     Spacer()
 
-                    Image("1024")
-                        .resizable()
-                        .scaledToFill()
-                        .scaleEffect(1.12)
-                        .frame(width: 118, height: 118)
-                        .clipShape(RoundedRectangle(cornerRadius: 22))
-                        .frame(width: 142, height: 142)
-                        .background(Color.blue)
-                        .cornerRadius(32)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 32)
+                            .fill(Color.blue)
+
+                        Image("AppLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .padding(10)
+                    }
+                    .frame(width: 142, height: 142)
+                    .clipShape(RoundedRectangle(cornerRadius: 32))
 
                     Text("SmartGarage")
                         .font(.system(size: 36, weight: .bold))
