@@ -2,16 +2,14 @@ import SwiftUI
 
 struct StaffBookingView: View {
     let initialTab: String
-    var onLogoutRequested: () -> Void
 
     @StateObject private var bookingService = BookingService()
     @State private var selectedTab: String
 
     let tabs = ["All", "Pending", "Active", "Completed"]
 
-    init(initialTab: String = "All", onLogoutRequested: @escaping () -> Void = { }) {
+    init(initialTab: String = "All") {
         self.initialTab = initialTab
-        self.onLogoutRequested = onLogoutRequested
         _selectedTab = State(initialValue: initialTab)
     }
 
@@ -21,108 +19,103 @@ struct StaffBookingView: View {
             return bookingService.bookings.filter {
                 $0.status.lowercased() == "pending"
             }
-
         case "Active":
             return bookingService.bookings.filter {
                 $0.status.lowercased() == "inspection started" ||
                 $0.status.lowercased() == "repair in progress"
             }
-
         case "Completed":
             return bookingService.bookings.filter {
                 $0.status.lowercased() == "completed"
             }
-
         default:
             return bookingService.bookings
         }
     }
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    StaffTopBar(title: "\(selectedTab) Bookings", onBack: onLogoutRequested) {
-                        Button {
-                            bookingService.fetchAllBookings()
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                                .foregroundColor(.blue)
-                        }
+        VStack {
+            VStack(alignment: .leading, spacing: 8) {
+                StaffTopBar(title: "\(selectedTab) Bookings") {
+                    Button {
+                        bookingService.fetchAllBookings()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.blue)
                     }
-
-                    Text("Manage customer service bookings")
-                        .font(.caption)
-                        .foregroundColor(.gray)
                 }
-                .padding()
 
-                HStack {
-                    ForEach(tabs, id: \.self) { tab in
-                        Button {
-                            selectedTab = tab
-                        } label: {
-                            Text(tab)
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundColor(selectedTab == tab ? .white : .blue)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 14)
-                                .background(selectedTab == tab ? Color.blue : Color.blue.opacity(0.1))
-                                .cornerRadius(10)
-                        }
+                Text("Manage customer service bookings")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding()
+
+            HStack {
+                ForEach(tabs, id: \.self) { tab in
+                    Button {
+                        selectedTab = tab
+                    } label: {
+                        Text(tab)
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(selectedTab == tab ? .white : .blue)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 14)
+                            .background(selectedTab == tab ? Color.blue : Color.blue.opacity(0.1))
+                            .cornerRadius(10)
                     }
-
-                    Spacer()
                 }
-                .padding(.horizontal)
 
-                if bookingService.isLoading {
-                    Spacer()
-                    ProgressView("Loading bookings...")
-                    Spacer()
-                } else if !bookingService.errorMessage.isEmpty {
-                    Spacer()
-                    Text(bookingService.errorMessage)
-                        .foregroundColor(.red)
-                        .font(.caption)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                    Spacer()
-                } else if filteredBookings.isEmpty {
-                    Spacer()
-                    Text("No \(selectedTab.lowercased()) bookings found")
-                        .foregroundColor(.gray)
-                    Spacer()
-                } else {
-                    ScrollView {
-                        VStack(spacing: 16) {
-                            ForEach(filteredBookings) { booking in
-                                NavigationLink {
-                                    StaffServiceDetailView(booking: booking)
-                                } label: {
-                                    StaffTaskCard(
-                                        customer: "Customer ID: \(booking.userId.prefix(6))",
-                                        vehicle: booking.vehicleName,
-                                        service: booking.serviceType,
-                                        date: booking.bookingDate,
-                                        time: booking.timeSlot,
-                                        status: booking.status,
-                                        color: statusColor(booking.status)
-                                    )
-                                }
-                                .buttonStyle(.plain)
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            if bookingService.isLoading {
+                Spacer()
+                ProgressView("Loading bookings...")
+                Spacer()
+            } else if !bookingService.errorMessage.isEmpty {
+                Spacer()
+                Text(bookingService.errorMessage)
+                    .foregroundColor(.red)
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                Spacer()
+            } else if filteredBookings.isEmpty {
+                Spacer()
+                Text("No \(selectedTab.lowercased()) bookings found")
+                    .foregroundColor(.gray)
+                Spacer()
+            } else {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        ForEach(filteredBookings) { booking in
+                            NavigationLink {
+                                StaffServiceDetailView(booking: booking)
+                            } label: {
+                                StaffTaskCard(
+                                    customer: "Customer ID: \(booking.userId.prefix(6))",
+                                    vehicle: booking.vehicleName,
+                                    service: booking.serviceType,
+                                    date: booking.bookingDate,
+                                    time: booking.timeSlot,
+                                    status: booking.status,
+                                    color: statusColor(booking.status)
+                                )
                             }
+                            .buttonStyle(.plain)
                         }
-                        .padding()
                     }
+                    .padding()
                 }
             }
-            .background(Color(.systemGroupedBackground))
-            .onAppear {
-                selectedTab = initialTab
-                bookingService.fetchAllBookings()
-            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .onAppear {
+            selectedTab = initialTab
+            bookingService.fetchAllBookings()
         }
     }
 
@@ -199,8 +192,4 @@ struct StaffTaskCard: View {
         .background(Color.white)
         .cornerRadius(16)
     }
-}
-
-#Preview {
-    StaffBookingView(initialTab: "All")
 }

@@ -2,8 +2,6 @@ import SwiftUI
 
 struct StaffActivityView: View {
 
-    var onLogoutRequested: () -> Void = { }
-
     @StateObject private var bookingService = BookingService()
 
     var recentActivities: [Booking] {
@@ -11,62 +9,60 @@ struct StaffActivityView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
 
-                    StaffTopBar(title: "Staff Activity", onBack: onLogoutRequested) {
-                        Image(systemName: "clock.fill")
-                            .font(.title3)
-                    }
+                StaffTopBar(title: "Staff Activity") {
+                    Image(systemName: "clock.fill")
+                        .font(.title3)
+                }
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Garage Activity")
-                            .font(.title)
-                            .fontWeight(.bold)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Garage Activity")
+                        .font(.title)
+                        .fontWeight(.bold)
 
-                        Text("Track recent booking updates and service progress.")
-                            .foregroundColor(.gray)
-                            .font(.subheadline)
-                    }
+                    Text("Track recent booking updates and service progress.")
+                        .foregroundColor(.gray)
+                        .font(.subheadline)
+                }
 
-                    if bookingService.isLoading {
-                        ProgressView("Loading activities...")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    } else if recentActivities.isEmpty {
-                        Text("No recent activities found.")
-                            .foregroundColor(.gray)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.white)
-                            .cornerRadius(16)
-                    } else {
-                        VStack(spacing: 14) {
-                            ForEach(recentActivities) { booking in
-                                NavigationLink {
-                                    StaffServiceDetailView(booking: booking)
-                                } label: {
-                                    StaffActivityRow(
-                                        vehicle: booking.vehicleName,
-                                        service: booking.serviceType,
-                                        date: booking.bookingDate,
-                                        time: booking.timeSlot,
-                                        status: booking.status,
-                                        color: statusColor(booking.status)
-                                    )
-                                }
-                                .buttonStyle(.plain)
+                if bookingService.isLoading {
+                    ProgressView("Loading activities...")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                } else if recentActivities.isEmpty {
+                    Text("No recent activities found.")
+                        .foregroundColor(.gray)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(16)
+                } else {
+                    VStack(spacing: 14) {
+                        ForEach(recentActivities) { booking in
+                            NavigationLink {
+                                StaffServiceDetailView(booking: booking)
+                            } label: {
+                                StaffActivityRow(
+                                    vehicle: booking.vehicleName,
+                                    service: booking.serviceType,
+                                    date: booking.bookingDate,
+                                    time: booking.timeSlot,
+                                    status: booking.status,
+                                    color: statusColor(booking.status)
+                                )
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
-                .padding()
             }
-            .background(Color(.systemGroupedBackground))
-            .onAppear {
-                bookingService.fetchAllBookings()
-            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground))
+        .onAppear {
+            bookingService.fetchAllBookings()
         }
     }
 
@@ -146,8 +142,4 @@ struct StaffActivityRow: View {
             return "car.fill"
         }
     }
-}
-
-#Preview {
-    StaffActivityView()
 }

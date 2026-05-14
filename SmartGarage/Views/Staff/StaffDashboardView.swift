@@ -1,16 +1,16 @@
 import SwiftUI
 
 struct StaffDashboardView: View {
-    
+
     var onLogoutRequested: () -> Void = { }
 
     @StateObject private var notificationService = AppNotificationService()
     @StateObject private var bookingService = BookingService()
-    
+
     var totalBookings: Int {
         bookingService.bookings.count
     }
-    
+
     var activeBookings: Int {
         bookingService.bookings.filter {
             $0.status.lowercased() == "pending" ||
@@ -18,179 +18,162 @@ struct StaffDashboardView: View {
             $0.status.lowercased() == "repair in progress"
         }.count
     }
-    
+
     var completedBookings: Int {
         bookingService.bookings.filter {
             $0.status.lowercased() == "completed"
         }.count
     }
-    
+
     var latestBookings: [Booking] {
         Array(bookingService.bookings.prefix(5))
     }
-    
+
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
 
-                    StaffTopBar(title: "SmartGarage Staff", onBack: onLogoutRequested) {
-                        NavigationLink {
-                            NotificationListView(userRole: "staff")
-                        } label: {
-                            ZStack(alignment: .topTrailing) {
-                                Image(systemName: "bell")
-                                    .font(.title3)
-                                    .foregroundColor(.black)
+                StaffTopBar(title: "SmartGarage Staff") {
+                    NavigationLink {
+                        NotificationListView(userRole: "staff")
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "bell")
+                                .font(.title3)
+                                .foregroundColor(.black)
 
-                                if notificationService.unreadCount > 0 {
-                                    Circle()
-                                        .fill(Color.red)
-                                        .frame(width: 12, height: 12)
-                                }
+                            if notificationService.unreadCount > 0 {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 12, height: 12)
                             }
                         }
-                        
+                    }
+
+                    NavigationLink {
+                        StaffProfileView(onLogoutRequested: onLogoutRequested)
+                    } label: {
                         Image(systemName: "person.circle.fill")
                             .font(.title2)
+                            .foregroundColor(.black)
                     }
+                }
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Good Morning, Marcus")
-                            .font(.title2)
-                            .fontWeight(.bold)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Good Morning, Marcus")
+                        .font(.title2)
+                        .fontWeight(.bold)
 
-                        Text("Here is your live garage operation overview for today.")
-                            .foregroundColor(.gray)
-                            .font(.subheadline)
+                    Text("Here is your live garage operation overview for today.")
+                        .foregroundColor(.gray)
+                        .font(.subheadline)
+                }
+
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ],
+                    spacing: 14
+                ) {
+                    NavigationLink {
+                        StaffBookingView(initialTab: "All")
+                    } label: {
+                        StaffStatCard(title: "Bookings", value: "\(totalBookings)", icon: "calendar", color: .blue)
                     }
+                    .buttonStyle(.plain)
 
-                    LazyVGrid(
-                        columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ],
-                        spacing: 14
-                    ) {
-                        NavigationLink {
-                            StaffBookingView(initialTab: "All", onLogoutRequested: onLogoutRequested)
-                        } label: {
-                            StaffStatCard(
-                                title: "Bookings",
-                                value: "\(totalBookings)",
-                                icon: "calendar",
-                                color: .blue
-                            )
-                        }
-                        .buttonStyle(.plain)
-
-                        NavigationLink {
-                            StaffBookingView(initialTab: "Active", onLogoutRequested: onLogoutRequested)
-                        } label: {
-                            StaffStatCard(
-                                title: "Active",
-                                value: "\(activeBookings)",
-                                icon: "wrench.fill",
-                                color: .orange
-                            )
-                        }
-                        .buttonStyle(.plain)
-
-                        NavigationLink {
-                            StaffBookingView(initialTab: "Completed", onLogoutRequested: onLogoutRequested)
-                        } label: {
-                            StaffStatCard(
-                                title: "Completed",
-                                value: "\(completedBookings)",
-                                icon: "checkmark.seal.fill",
-                                color: .green
-                            )
-                        }
-                        .buttonStyle(.plain)
-
-                        NavigationLink {
-                            StaffBookingView(initialTab: "Pending", onLogoutRequested: onLogoutRequested)
-                        } label: {
-                            StaffStatCard(
-                                title: "Pending",
-                                value: "\(pendingCount())",
-                                icon: "clock.fill",
-                                color: .purple
-                            )
-                        }
-                        .buttonStyle(.plain)
+                    NavigationLink {
+                        StaffBookingView(initialTab: "Active")
+                    } label: {
+                        StaffStatCard(title: "Active", value: "\(activeBookings)", icon: "wrench.fill", color: .orange)
                     }
+                    .buttonStyle(.plain)
 
-                    HStack {
-                        Text("Latest Bookings")
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        Button {
-                            bookingService.fetchAllBookings()
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                                .foregroundColor(.blue)
-                        }
+                    NavigationLink {
+                        StaffBookingView(initialTab: "Completed")
+                    } label: {
+                        StaffStatCard(title: "Completed", value: "\(completedBookings)", icon: "checkmark.seal.fill", color: .green)
                     }
+                    .buttonStyle(.plain)
 
-                    if bookingService.isLoading {
-                        ProgressView("Loading bookings...")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    } else if !bookingService.errorMessage.isEmpty {
-                        Text(bookingService.errorMessage)
-                            .foregroundColor(.red)
-                            .font(.caption)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.white)
-                            .cornerRadius(14)
-                    } else if latestBookings.isEmpty {
-                        Text("No bookings available.")
-                            .foregroundColor(.gray)
-                            .font(.caption)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.white)
-                            .cornerRadius(14)
-                    } else {
-                        VStack(spacing: 14) {
-                            ForEach(latestBookings) { booking in
-                                NavigationLink {
-                                    StaffServiceDetailView(booking: booking)
-                                } label: {
-                                    StaffDashboardBookingRow(
-                                        customer: "Customer ID: \(booking.userId.prefix(6))",
-                                        vehicle: booking.vehicleName,
-                                        service: booking.serviceType,
-                                        time: booking.timeSlot,
-                                        status: booking.status,
-                                        color: statusColor(booking.status)
-                                    )
-                                }
-                                .buttonStyle(.plain)
+                    NavigationLink {
+                        StaffBookingView(initialTab: "Pending")
+                    } label: {
+                        StaffStatCard(title: "Pending", value: "\(pendingCount())", icon: "clock.fill", color: .purple)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                HStack {
+                    Text("Latest Bookings")
+                        .font(.headline)
+
+                    Spacer()
+
+                    Button {
+                        bookingService.fetchAllBookings()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.blue)
+                    }
+                }
+
+                if bookingService.isLoading {
+                    ProgressView("Loading bookings...")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                } else if !bookingService.errorMessage.isEmpty {
+                    Text(bookingService.errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(14)
+                } else if latestBookings.isEmpty {
+                    Text("No bookings available.")
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(14)
+                } else {
+                    VStack(spacing: 14) {
+                        ForEach(latestBookings) { booking in
+                            NavigationLink {
+                                StaffServiceDetailView(booking: booking)
+                            } label: {
+                                StaffDashboardBookingRow(
+                                    customer: "Customer ID: \(booking.userId.prefix(6))",
+                                    vehicle: booking.vehicleName,
+                                    service: booking.serviceType,
+                                    time: booking.timeSlot,
+                                    status: booking.status,
+                                    color: statusColor(booking.status)
+                                )
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
-                .padding()
             }
-            .background(Color(.systemGroupedBackground))
-            .onAppear {
-                notificationService.fetchNotifications(userRole: "staff")
-                bookingService.fetchAllBookings()
-            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground))
+        .onAppear {
+            notificationService.fetchNotifications(userRole: "staff")
+            bookingService.fetchAllBookings()
         }
     }
-    
+
     func pendingCount() -> Int {
         bookingService.bookings.filter {
             $0.status.lowercased() == "pending"
         }.count
     }
-    
+
     func statusColor(_ status: String) -> Color {
         switch status.lowercased() {
         case "pending":
@@ -286,8 +269,4 @@ struct StaffDashboardBookingRow: View {
         .background(Color.white)
         .cornerRadius(16)
     }
-}
-
-#Preview {
-    StaffDashboardView()
 }
