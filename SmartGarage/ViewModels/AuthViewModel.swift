@@ -16,7 +16,7 @@ class AuthViewModel: ObservableObject {
                 self.isLoading = false
                 
                 if let error = error {
-                    self.errorMessage = error.localizedDescription
+                    self.errorMessage = self.friendlyLoginMessage(for: error)
                     completion(false)
                     return
                 }
@@ -78,5 +78,23 @@ class AuthViewModel: ObservableObject {
                     }
             }
         }
+    }
+
+    private func friendlyLoginMessage(for error: Error) -> String {
+        let message = error.localizedDescription.lowercased()
+
+        if message.contains("network") {
+            return "Unable to connect. Please check your internet connection and try again."
+        }
+
+        if message.contains("password") ||
+            message.contains("credential") ||
+            message.contains("malformed") ||
+            message.contains("expired") ||
+            message.contains("user") {
+            return "Login failed. Please check your username and 6-digit password, then try again."
+        }
+
+        return "We could not sign you in right now. Please try again in a moment."
     }
 }

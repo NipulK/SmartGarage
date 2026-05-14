@@ -15,17 +15,7 @@ struct WelcomeView: View {
 
                     Spacer()
 
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 32)
-                            .fill(Color.blue)
-
-                        Image("AppLogo")
-                            .resizable()
-                            .scaledToFit()
-                            .padding(10)
-                    }
-                    .frame(width: 142, height: 142)
-                    .clipShape(RoundedRectangle(cornerRadius: 32))
+                    AppLogoMark(size: 142, cornerRadius: 32, padding: 8)
 
                     Text("SmartGarage")
                         .font(.system(size: 36, weight: .bold))
@@ -71,5 +61,25 @@ struct WelcomeView: View {
             }
         }
         
+    }
+}
+
+struct AppLogoMark: View {
+    var size: CGFloat = 142
+    var cornerRadius: CGFloat = 32
+    var padding: CGFloat = 8
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(Color.blue)
+
+            Image("AppLogo")
+                .resizable()
+                .scaledToFill()
+                .padding(padding)
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
 }

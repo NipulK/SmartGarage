@@ -15,6 +15,7 @@ struct CustomerProfileView: View {
     @State private var isLoadingProfile = false
     @State private var selectedLanguage = "English"
 
+    var showsTopBarBackButton = true
     var onLogoutRequested: () -> Void = { }
 
     var body: some View {
@@ -22,7 +23,10 @@ struct CustomerProfileView: View {
             ScrollView {
                 VStack(spacing: 22) {
 
-                    CustomerTopBar(onBack: onLogoutRequested) {
+                    CustomerTopBar(
+                        onBack: onLogoutRequested,
+                        showsBackButton: showsTopBarBackButton
+                    ) {
                         NavigationLink {
                             NotificationListView(userRole: "customer")
                         } label: {

@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 struct CustomerHomeView: View {
 
@@ -11,6 +12,7 @@ struct CustomerHomeView: View {
     @State private var selectedBooking: Booking?
     @State private var showChat = false
     @State private var activePopup: AppNotification?
+    @State private var customerName = "Customer"
 
     @State private var selectedVehicle: Vehicle?
 
@@ -52,7 +54,9 @@ struct CustomerHomeView: View {
 
                         NavigationLink {
 
-                            CustomerProfileView {
+                            CustomerProfileView(
+                                showsTopBarBackButton: false
+                            ) {
                                 onLogoutRequested()
                             }
 
@@ -66,7 +70,7 @@ struct CustomerHomeView: View {
 
                     VStack(alignment: .leading, spacing: 6) {
 
-                        Text("Hello, Customer")
+                        Text("Hello, \(customerDisplayName)")
                             .font(.title2)
                             .fontWeight(.bold)
 
@@ -364,6 +368,7 @@ struct CustomerHomeView: View {
 
             vehicleService.fetchVehicles()
             bookingService.fetchBookings()
+            loadCustomerName()
 
             notificationService.fetchNotifications(
                 userRole: "customer"
@@ -406,6 +411,27 @@ struct CustomerHomeView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var customerDisplayName: String {
+        let trimmedName = customerName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmedName.isEmpty {
+            return "Customer"
+        }
+
+        return trimmedName
+    }
+
+    private func loadCustomerName() {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            customerName = "Customer"
+            return
+        }
+
+        bookingService.fetchCustomerName(userId: userId) { name in
+            customerName = name
         }
     }
 

@@ -15,6 +15,8 @@ struct LoginView: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
+
+            AppLogoMark(size: 112, cornerRadius: 26, padding: 7)
             
             Text("SmartGarage")
                 .font(.largeTitle)
@@ -44,9 +46,14 @@ struct LoginView: View {
                 }
             
             if !authVM.errorMessage.isEmpty {
-                Text(authVM.errorMessage)
-                    .foregroundColor(.red)
+                Label(authVM.errorMessage, systemImage: "exclamationmark.circle.fill")
                     .font(.caption)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Color.red.opacity(0.08))
+                    .cornerRadius(12)
                     .padding(.horizontal)
             }
             
