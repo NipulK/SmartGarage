@@ -40,16 +40,17 @@ struct StaffMainView: View {
                 showLogoutConfirmation = true
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.black)
-                    .frame(width: 56, height: 56)
-                    .background(Color.white.opacity(0.92))
+                    .frame(width: 40, height: 40)
+                    .background(Color.white)
                     .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.05), radius: 10, y: 5)
-                    .accessibilityLabel("Back")
+                    .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Back")
             .padding(.leading, 16)
-            .padding(.top, 54)
+            .padding(.top, 10)
         }
         .alert("Logout Staff Account?", isPresented: $showLogoutConfirmation) {
             Button("Stay Logged In", role: .cancel) { }
