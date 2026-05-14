@@ -15,31 +15,44 @@ struct CustomerMainView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            CustomerHomeView {
+            CustomerHomeView(
+                showsTopBarBackButton: false
+            ) {
                 requestLogout()
             }
                 .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(0)
 
-            CustomerBookingView(selectedTab: $selectedTab) {
+            CustomerBookingView(
+                selectedTab: $selectedTab,
+                showsTopBarBackButton: false
+            ) {
                 requestLogout()
             }
                 .tabItem { Label("Booking", systemImage: "wrench.fill") }
                 .tag(1)
 
-            CustomerGarageView(selectedTab: $selectedTab) {
+            CustomerGarageView(
+                selectedTab: $selectedTab,
+                showsTopBarBackButton: false
+            ) {
                 requestLogout()
             }
                 .tabItem { Label("Garage", systemImage: "car.fill") }
                 .tag(2)
 
-            CustomerActivityView {
+            CustomerActivityView(
+                selectedTab: $selectedTab,
+                showsTopBarBackButton: false
+            ) {
                 requestLogout()
             }
                 .tabItem { Label("Activity", systemImage: "clock.fill") }
                 .tag(3)
 
-            CustomerProfileView {
+            CustomerProfileView(
+                showsTopBarBackButton: false
+            ) {
                 requestLogout()
             }
                 .tabItem { Label("Profile", systemImage: "person.fill") }

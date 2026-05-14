@@ -3,7 +3,10 @@ import SwiftUI
 struct CustomerBookingView: View {
 
     @Binding var selectedTab: Int
+    @Environment(\.dismiss) private var dismiss
+    var showsTopBarBackButton = true
     var onLogoutRequested: () -> Void = { }
+    var onBookingConfirmed: () -> Void = { }
 
     @StateObject private var bookingService = BookingService()
     @StateObject private var vehicleService = VehicleService()
@@ -47,19 +50,26 @@ struct CustomerBookingView: View {
         selectedTab: Binding<Int> = .constant(1),
         preselectedService: String = "Full System Diagnostic",
         preselectedVehicleId: String? = nil,
-        onLogoutRequested: @escaping () -> Void = { }
+        showsTopBarBackButton: Bool = true,
+        onLogoutRequested: @escaping () -> Void = { },
+        onBookingConfirmed: @escaping () -> Void = { }
     ) {
         self._selectedTab = selectedTab
         self._selectedService = State(initialValue: preselectedService)
         self.preselectedVehicleId = preselectedVehicleId
+        self.showsTopBarBackButton = showsTopBarBackButton
         self.onLogoutRequested = onLogoutRequested
+        self.onBookingConfirmed = onBookingConfirmed
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
 
-                CustomerTopBar(onBack: onLogoutRequested) {
+                CustomerTopBar(
+                    onBack: onLogoutRequested,
+                    showsBackButton: showsTopBarBackButton
+                ) {
                     NavigationLink {
                         CustomerProfileView {
                             onLogoutRequested()
@@ -213,7 +223,9 @@ struct CustomerBookingView: View {
         }
         .alert("Booking Confirmed", isPresented: $showBookingAlert) {
             Button("OK") {
-                selectedTab = 3
+                selectedTab = 0
+                onBookingConfirmed()
+                dismiss()
             }
         } message: {
             Text(bookingSummary)

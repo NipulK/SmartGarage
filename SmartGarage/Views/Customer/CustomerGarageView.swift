@@ -4,12 +4,15 @@ struct CustomerGarageView: View {
 
     @Binding var selectedTab: Int
     var onLogoutRequested: () -> Void = { }
+    var showsTopBarBackButton = true
 
     init(
         selectedTab: Binding<Int> = .constant(2),
+        showsTopBarBackButton: Bool = true,
         onLogoutRequested: @escaping () -> Void = { }
     ) {
         self._selectedTab = selectedTab
+        self.showsTopBarBackButton = showsTopBarBackButton
         self.onLogoutRequested = onLogoutRequested
     }
 
@@ -24,7 +27,10 @@ struct CustomerGarageView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
 
-                    CustomerTopBar(onBack: onLogoutRequested) {
+                    CustomerTopBar(
+                        onBack: onLogoutRequested,
+                        showsBackButton: showsTopBarBackButton
+                    ) {
                         NavigationLink {
                             CustomerProfileView {
                                 onLogoutRequested()

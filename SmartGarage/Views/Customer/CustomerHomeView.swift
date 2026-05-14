@@ -4,6 +4,7 @@ import FirebaseAuth
 struct CustomerHomeView: View {
 
     var onLogoutRequested: () -> Void = { }
+    var showsTopBarBackButton = true
 
     @StateObject private var vehicleService = VehicleService()
     @StateObject private var bookingService = BookingService()
@@ -30,7 +31,10 @@ struct CustomerHomeView: View {
 
                 VStack(alignment: .leading, spacing: 22) {
 
-                    CustomerTopBar(onBack: onLogoutRequested) {
+                    CustomerTopBar(
+                        onBack: onLogoutRequested,
+                        showsBackButton: showsTopBarBackButton
+                    ) {
                         NavigationLink {
 
                             NotificationListView(userRole: "customer")
@@ -200,7 +204,10 @@ struct CustomerHomeView: View {
 
                         NavigationLink {
 
-                            CustomerBookingView(selectedTab: .constant(1)) {
+                            CustomerBookingView(
+                                selectedTab: .constant(0),
+                                showsTopBarBackButton: false
+                            ) {
                                 onLogoutRequested()
                             }
 
@@ -220,6 +227,7 @@ struct CustomerHomeView: View {
                         NavigationLink {
 
                             CustomerActivityView(
+                                selectedTab: .constant(0),
                                 showsTopBarBackButton: false
                             ) {
                                 onLogoutRequested()

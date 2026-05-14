@@ -76,9 +76,12 @@ struct LoginView: View {
             .disabled(!isLoginReady || authVM.isLoading)
             
             Spacer()
-            
-            NavigationLink("", destination: CustomerMainView(isCustomerLoggedIn: $goToCustomer), isActive: $goToCustomer)
-            NavigationLink("", destination: StaffMainView(isStaffLoggedIn: $goToStaff), isActive: $goToStaff)
+        }
+        .fullScreenCover(isPresented: $goToCustomer) {
+            CustomerMainView(isCustomerLoggedIn: $goToCustomer)
+        }
+        .fullScreenCover(isPresented: $goToStaff) {
+            StaffMainView(isStaffLoggedIn: $goToStaff)
         }
     }
     

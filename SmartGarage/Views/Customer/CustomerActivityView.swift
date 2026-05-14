@@ -2,13 +2,28 @@ import SwiftUI
 
 struct CustomerActivityView: View {
 
+    @Binding var selectedTab: Int
+    @Environment(\.dismiss) private var dismiss
     var showsTopBarBackButton = true
     var onLogoutRequested: () -> Void = { }
+    var onBookingConfirmed: () -> Void = { }
 
     @StateObject private var bookingService = BookingService()
     @StateObject private var damageService = DamageDetectionService()
     @State private var reportToDelete: DamageReport?
     @State private var reportForBooking: DamageReport?
+
+    init(
+        selectedTab: Binding<Int> = .constant(3),
+        showsTopBarBackButton: Bool = true,
+        onLogoutRequested: @escaping () -> Void = { },
+        onBookingConfirmed: @escaping () -> Void = { }
+    ) {
+        self._selectedTab = selectedTab
+        self.showsTopBarBackButton = showsTopBarBackButton
+        self.onLogoutRequested = onLogoutRequested
+        self.onBookingConfirmed = onBookingConfirmed
+    }
 
     var body: some View {
         NavigationStack {
@@ -109,10 +124,19 @@ struct CustomerActivityView: View {
             .background(Color(.systemGroupedBackground))
             .navigationDestination(item: $reportForBooking) { report in
                 CustomerBookingView(
-                    selectedTab: .constant(1),
+                    selectedTab: $selectedTab,
                     preselectedService: "Damage Repair - \(report.damageType)",
                     preselectedVehicleId: report.vehicleId,
-                    onLogoutRequested: onLogoutRequested
+                    showsTopBarBackButton: false,
+                    onLogoutRequested: onLogoutRequested,
+                    onBookingConfirmed: {
+                        selectedTab = 0
+                        onBookingConfirmed()
+
+                        if !showsTopBarBackButton {
+                            dismiss()
+                        }
+                    }
                 )
             }
             .onAppear {

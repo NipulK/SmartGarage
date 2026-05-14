@@ -67,7 +67,12 @@ struct DamageResultView: View {
                     NavigationLink {
                         CustomerBookingView(
                             selectedTab: $selectedTab,
-                            preselectedService: "Damage Repair - \(damageType)"
+                            preselectedService: "Damage Repair - \(damageType)",
+                            showsTopBarBackButton: false,
+                            onBookingConfirmed: {
+                                selectedTab = 0
+                                dismiss()
+                            }
                         )
                     } label: {
                         Text("Book This Repair Now")
@@ -101,10 +106,12 @@ struct DamageResultView: View {
         .alert("Saved for Later", isPresented: $showSavedAlert) {
             Button("View Activity") {
                 selectedTab = 3
+                dismiss()
             }
 
             Button("OK", role: .cancel) {
                 selectedTab = 0
+                dismiss()
             }
         } message: {
             Text("Your damage report has been saved. You can view it in the Activity page.")
