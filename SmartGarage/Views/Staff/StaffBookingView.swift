@@ -2,14 +2,16 @@ import SwiftUI
 
 struct StaffBookingView: View {
     let initialTab: String
+    var onLogoutRequested: () -> Void
 
     @StateObject private var bookingService = BookingService()
     @State private var selectedTab: String
 
     let tabs = ["All", "Pending", "Active", "Completed"]
 
-    init(initialTab: String = "All") {
+    init(initialTab: String = "All", onLogoutRequested: @escaping () -> Void = { }) {
         self.initialTab = initialTab
+        self.onLogoutRequested = onLogoutRequested
         _selectedTab = State(initialValue: initialTab)
     }
 
@@ -39,25 +41,19 @@ struct StaffBookingView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(selectedTab) Bookings")
-                            .font(.title)
-                            .fontWeight(.bold)
-
-                        Text("Manage customer service bookings")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                VStack(alignment: .leading, spacing: 8) {
+                    StaffTopBar(title: "\(selectedTab) Bookings", onBack: onLogoutRequested) {
+                        Button {
+                            bookingService.fetchAllBookings()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundColor(.blue)
+                        }
                     }
 
-                    Spacer()
-
-                    Button {
-                        bookingService.fetchAllBookings()
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.blue)
-                    }
+                    Text("Manage customer service bookings")
+                        .font(.caption)
+                        .foregroundColor(.gray)
                 }
                 .padding()
 

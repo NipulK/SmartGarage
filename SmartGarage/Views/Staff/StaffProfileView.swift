@@ -10,6 +10,11 @@ struct StaffProfileView: View {
             ScrollView {
                 VStack(spacing: 22) {
 
+                    StaffTopBar(title: "SmartGarage Staff", onBack: onLogoutRequested) {
+                        Image(systemName: "person.circle.fill")
+                            .font(.title2)
+                    }
+
                     VStack(spacing: 12) {
                         Image(systemName: "person.crop.circle.fill")
                             .font(.system(size: 90))

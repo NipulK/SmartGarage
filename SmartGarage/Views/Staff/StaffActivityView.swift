@@ -2,6 +2,8 @@ import SwiftUI
 
 struct StaffActivityView: View {
 
+    var onLogoutRequested: () -> Void = { }
+
     @StateObject private var bookingService = BookingService()
 
     var recentActivities: [Booking] {
@@ -13,15 +15,7 @@ struct StaffActivityView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
 
-                    HStack {
-                        Image(systemName: "line.3.horizontal")
-
-                        Text("Staff Activity")
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-
-                        Spacer()
-
+                    StaffTopBar(title: "Staff Activity", onBack: onLogoutRequested) {
                         Image(systemName: "clock.fill")
                             .font(.title3)
                     }

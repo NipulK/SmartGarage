@@ -2,6 +2,8 @@ import SwiftUI
 
 struct StaffDashboardView: View {
     
+    var onLogoutRequested: () -> Void = { }
+
     @StateObject private var notificationService = AppNotificationService()
     @StateObject private var bookingService = BookingService()
     
@@ -32,15 +34,7 @@ struct StaffDashboardView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
 
-                    HStack {
-                        Image(systemName: "line.3.horizontal")
-                        
-                        Text("SmartGarage Staff")
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        
-                        Spacer()
-                        
+                    StaffTopBar(title: "SmartGarage Staff", onBack: onLogoutRequested) {
                         NavigationLink {
                             NotificationListView(userRole: "staff")
                         } label: {
@@ -79,7 +73,7 @@ struct StaffDashboardView: View {
                         spacing: 14
                     ) {
                         NavigationLink {
-                            StaffBookingView(initialTab: "All")
+                            StaffBookingView(initialTab: "All", onLogoutRequested: onLogoutRequested)
                         } label: {
                             StaffStatCard(
                                 title: "Bookings",
@@ -91,7 +85,7 @@ struct StaffDashboardView: View {
                         .buttonStyle(.plain)
 
                         NavigationLink {
-                            StaffBookingView(initialTab: "Active")
+                            StaffBookingView(initialTab: "Active", onLogoutRequested: onLogoutRequested)
                         } label: {
                             StaffStatCard(
                                 title: "Active",
@@ -103,7 +97,7 @@ struct StaffDashboardView: View {
                         .buttonStyle(.plain)
 
                         NavigationLink {
-                            StaffBookingView(initialTab: "Completed")
+                            StaffBookingView(initialTab: "Completed", onLogoutRequested: onLogoutRequested)
                         } label: {
                             StaffStatCard(
                                 title: "Completed",
@@ -115,7 +109,7 @@ struct StaffDashboardView: View {
                         .buttonStyle(.plain)
 
                         NavigationLink {
-                            StaffBookingView(initialTab: "Pending")
+                            StaffBookingView(initialTab: "Pending", onLogoutRequested: onLogoutRequested)
                         } label: {
                             StaffStatCard(
                                 title: "Pending",
