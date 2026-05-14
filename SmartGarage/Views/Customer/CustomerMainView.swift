@@ -16,7 +16,7 @@ struct CustomerMainView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             CustomerHomeView(
-                showsTopBarBackButton: false
+                showsTopBarBackButton: true
             ) {
                 requestLogout()
             }
