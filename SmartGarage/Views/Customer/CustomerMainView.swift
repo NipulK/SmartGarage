@@ -18,6 +18,7 @@ struct CustomerMainView: View {
             TabView(selection: $selectedTab) {
 
                 CustomerHomeView(
+                    selectedTab: $selectedTab,
                     showsTopBarBackButton: true
                 ) {
                     requestLogout()
@@ -106,7 +107,6 @@ struct CustomerMainView: View {
         }
     }
 }
-
 
 #Preview {
     CustomerMainView()

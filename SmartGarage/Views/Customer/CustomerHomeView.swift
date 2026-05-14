@@ -3,6 +3,8 @@ import FirebaseAuth
 
 struct CustomerHomeView: View {
 
+    @Binding var selectedTab: Int
+
     var onLogoutRequested: () -> Void = { }
     var showsTopBarBackButton = true
 
@@ -16,6 +18,16 @@ struct CustomerHomeView: View {
     @State private var activePopup: AppNotification?
     @State private var customerName = "Customer"
     @State private var selectedVehicle: Vehicle?
+
+    init(
+        selectedTab: Binding<Int> = .constant(0),
+        showsTopBarBackButton: Bool = true,
+        onLogoutRequested: @escaping () -> Void = { }
+    ) {
+        self._selectedTab = selectedTab
+        self.showsTopBarBackButton = showsTopBarBackButton
+        self.onLogoutRequested = onLogoutRequested
+    }
 
     var latestActiveBooking: Booking? {
         bookingService.bookings.first {
@@ -78,13 +90,8 @@ struct CustomerHomeView: View {
                     }
 
                     HStack {
-                        NavigationLink {
-                            CustomerBookingView(
-                                selectedTab: .constant(1),
-                                showsTopBarBackButton: false
-                            ) {
-                                onLogoutRequested()
-                            }
+                        Button {
+                            selectedTab = 1
                         } label: {
                             Label("Book Service", systemImage: "calendar.badge.plus")
                                 .frame(maxWidth: .infinity)
@@ -94,13 +101,8 @@ struct CustomerHomeView: View {
                                 .cornerRadius(12)
                         }
 
-                        NavigationLink {
-                            CustomerActivityView(
-                                selectedTab: .constant(3),
-                                showsTopBarBackButton: false
-                            ) {
-                                onLogoutRequested()
-                            }
+                        Button {
+                            selectedTab = 3
                         } label: {
                             Label("View History", systemImage: "clock.arrow.circlepath")
                                 .frame(maxWidth: .infinity)
