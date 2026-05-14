@@ -4,6 +4,7 @@ import FirebaseAuth
 struct CustomerMainView: View {
 
     @Binding var isCustomerLoggedIn: Bool
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedTab = 0
     @State private var showLogoutConfirmation = false
     @State private var logoutErrorMessage = ""
@@ -15,31 +16,31 @@ struct CustomerMainView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             CustomerHomeView {
-                showLogoutConfirmation = true
+                requestLogout()
             }
                 .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(0)
 
             CustomerBookingView(selectedTab: $selectedTab) {
-                showLogoutConfirmation = true
+                requestLogout()
             }
                 .tabItem { Label("Booking", systemImage: "wrench.fill") }
                 .tag(1)
 
             CustomerGarageView(selectedTab: $selectedTab) {
-                showLogoutConfirmation = true
+                requestLogout()
             }
                 .tabItem { Label("Garage", systemImage: "car.fill") }
                 .tag(2)
 
             CustomerActivityView {
-                showLogoutConfirmation = true
+                requestLogout()
             }
                 .tabItem { Label("Activity", systemImage: "clock.fill") }
                 .tag(3)
 
             CustomerProfileView {
-                showLogoutConfirmation = true
+                requestLogout()
             }
                 .tabItem { Label("Profile", systemImage: "person.fill") }
                 .tag(4)
@@ -66,10 +67,15 @@ struct CustomerMainView: View {
         }
     }
 
+    private func requestLogout() {
+        showLogoutConfirmation = true
+    }
+
     private func logoutCustomer() {
         do {
             try Auth.auth().signOut()
             isCustomerLoggedIn = false
+            dismiss()
         } catch {
             logoutErrorMessage = error.localizedDescription
         }
