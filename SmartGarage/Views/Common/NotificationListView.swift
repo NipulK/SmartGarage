@@ -1,6 +1,5 @@
 import SwiftUI
 
-
 struct NotificationListView: View {
     let userRole: String
 
@@ -14,24 +13,44 @@ struct NotificationListView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
-                ForEach(notificationService.notifications) { notification in
-                    Button {
-                        openChat(notification)
-                    } label: {
-                        NotificationChatRow(
-                            notification: notification,
-                            context: notificationContexts[contextKey(for: notification)]
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .onAppear {
-                        loadContext(for: notification)
+
+                if notificationService.notifications.isEmpty {
+
+                    Text("No notifications yet.")
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white)
+                        .cornerRadius(14)
+
+                } else {
+
+                    ForEach(notificationService.notifications) { notification in
+
+                        Button {
+                            openChat(notification)
+                        } label: {
+
+                            NotificationChatRow(
+                                notification: notification,
+                                context: notificationContexts[contextKey(for: notification)]
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .onAppear {
+                            loadContext(for: notification)
+                        }
                     }
                 }
             }
             .padding()
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("Notifications")
+        .navigationBarTitleDisplayMode(.inline)
+
+        // 🔥 IMPORTANT (navigation fix)
         .navigationDestination(isPresented: $showChat) {
             if let selectedBooking {
                 ChatView(
@@ -40,48 +59,60 @@ struct NotificationListView: View {
                 )
             }
         }
+
         .onAppear {
             notificationService.fetchNotifications(userRole: userRole)
         }
     }
+
+    // MARK: - HELPERS
 
     func contextKey(for notification: AppNotification) -> String {
         notification.id ?? notification.bookingId
     }
 
     func loadContext(for notification: AppNotification) {
+
         let key = contextKey(for: notification)
 
-        if notificationContexts[key] != nil {
-            return
-        }
+        if notificationContexts[key] != nil { return }
 
-        bookingService.fetchBookingById(bookingId: notification.bookingId) { booking in
+        bookingService.fetchBookingById(
+            bookingId: notification.bookingId
+        ) { booking in
+
             guard let booking else { return }
 
             bookingService.fetchCustomerName(userId: booking.userId) { customerName in
-                notificationContexts[key] = NotificationChatContext(
-                    customerName: customerName,
-                    topic: "\(booking.vehicleName) - \(booking.serviceType)",
-                    schedule: "\(booking.bookingDate) at \(booking.timeSlot)",
-                    status: booking.status
-                )
+
+                DispatchQueue.main.async {
+                    notificationContexts[key] = NotificationChatContext(
+                        customerName: customerName,
+                        topic: "\(booking.vehicleName) - \(booking.serviceType)",
+                        schedule: "\(booking.bookingDate) at \(booking.timeSlot)",
+                        status: booking.status
+                    )
+                }
             }
         }
     }
 
+    // 🔥 FINAL FIXED FUNCTION
     func openChat(_ notification: AppNotification) {
+
         if let id = notification.id {
             notificationService.markAsRead(notificationId: id)
         }
 
-        bookingService.fetchBookingById(bookingId: notification.bookingId) { booking in
-            if let booking {
-                selectedBooking = booking
+        bookingService.fetchBookingById(
+            bookingId: notification.bookingId
+        ) { booking in
 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    showChat = true
-                }
+            guard let booking else { return }
+
+            DispatchQueue.main.async {
+                selectedBooking = booking
+                showChat = true
             }
         }
     }
@@ -109,7 +140,7 @@ private struct NotificationChatRow: View {
                     .cornerRadius(10)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(context?.customerName ?? senderFallback)
+                    Text(context?.customerName ?? notification.senderName)
                         .font(.headline)
                         .foregroundColor(.black)
 
@@ -148,9 +179,5 @@ private struct NotificationChatRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(notification.isRead ? Color.white : Color.blue.opacity(0.1))
         .cornerRadius(16)
-    }
-
-    private var senderFallback: String {
-        notification.senderName == "Customer" ? "Customer" : notification.senderName
     }
 }
