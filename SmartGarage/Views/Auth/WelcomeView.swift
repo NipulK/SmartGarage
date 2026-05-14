@@ -5,62 +5,73 @@ struct WelcomeView: View {
         NavigationStack {
             ZStack {
                 LinearGradient(
-                    colors: [Color.blue.opacity(0.2), Color.white],
+                    colors: [
+                        Color.blue.opacity(0.18),
+                        Color(.systemBackground),
+                        Color(.systemGroupedBackground)
+                    ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
                 .ignoresSafeArea()
 
-                VStack(spacing: 30) {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 80)
 
-                    Spacer()
+                    VStack(spacing: 18) {
+                        AppLogoMark(size: 156, cornerRadius: 36, padding: 6)
+                            .shadow(color: .blue.opacity(0.18), radius: 18, y: 10)
 
-                    AppLogoMark(size: 142, cornerRadius: 32, padding: 8)
+                        VStack(spacing: 10) {
+                            Text("SmartGarage")
+                                .font(.system(size: 42, weight: .bold))
+                                .minimumScaleFactor(0.75)
+                                .lineLimit(1)
 
-                    Text("SmartGarage")
-                        .font(.system(size: 36, weight: .bold))
-
-                    Text("Elevating vehicle maintenance to a digital concierge experience.")
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.gray)
-                        .padding(.horizontal, 40)
-
-                    Spacer()
-
-                    NavigationLink(destination: LoginView()) {
-                        Text("Get Started")
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(12)
+                            Text("Elevating vehicle maintenance to a digital concierge experience.")
+                                .font(.system(size: 17))
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(.gray)
+                                .lineSpacing(4)
+                                .padding(.horizontal, 8)
+                        }
                     }
-                    .padding(.horizontal)
-
-                    NavigationLink(destination: LoginView()) {
-                        Text("Sign In")
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(radius: 2)
-                    }
-                    .padding(.horizontal)
+                    .frame(maxWidth: .infinity)
 
                     Spacer()
-                    
-                    NavigationLink("Sign Up", destination: RegisterView())
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                    
-                        .padding(.horizontal)
 
-                        Spacer()
+                    VStack(spacing: 14) {
+                        NavigationLink(destination: LoginView()) {
+                            Text("Get Started")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 58)
+                                .background(Color.blue)
+                                .cornerRadius(16)
+                        }
+
+                        NavigationLink(destination: LoginView()) {
+                            Text("Sign In")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 58)
+                                .background(Color.white)
+                                .cornerRadius(16)
+                                .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+                        }
+
+                        NavigationLink("Create New Account", destination: RegisterView())
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.gray)
+                            .padding(.top, 18)
+                    }
+                    .padding(.bottom, 54)
                 }
+                .padding(.horizontal, 24)
             }
         }
-        
     }
 }
 
@@ -76,7 +87,7 @@ struct AppLogoMark: View {
 
             Image("AppLogo")
                 .resizable()
-                .scaledToFill()
+                .scaledToFit()
                 .padding(padding)
         }
         .frame(width: size, height: size)
