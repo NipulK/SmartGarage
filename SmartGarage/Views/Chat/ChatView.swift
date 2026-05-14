@@ -11,6 +11,10 @@ struct ChatView: View {
     @State private var customerName = "Customer"
     @State private var resolvedSenderName: String
 
+    private var isStaffMember: Bool {
+        senderName == "Staff"
+    }
+
     init(booking: Booking, senderName: String) {
         self.booking = booking
         self.senderName = senderName
@@ -23,18 +27,41 @@ struct ChatView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        ConversationHeader(
-                            customerName: customerName,
-                            vehicleName: booking.vehicleName,
-                            serviceType: booking.serviceType,
-                            bookingDate: booking.bookingDate,
-                            timeSlot: booking.timeSlot,
-                            status: booking.status
-                        )
-                        .padding(.bottom, 4)
+                        if isStaffMember {
+                            NavigationLink {
+                                StaffServiceDetailView(booking: booking)
+                            } label: {
+                                ConversationHeader(
+                                    customerName: customerName,
+                                    vehicleName: booking.vehicleName,
+                                    serviceType: booking.serviceType,
+                                    bookingDate: booking.bookingDate,
+                                    timeSlot: booking.timeSlot,
+                                    status: booking.status,
+                                    showsNavigationIndicator: true
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.bottom, 4)
+                        } else {
+                            ConversationHeader(
+                                customerName: customerName,
+                                vehicleName: booking.vehicleName,
+                                serviceType: booking.serviceType,
+                                bookingDate: booking.bookingDate,
+                                timeSlot: booking.timeSlot,
+                                status: booking.status
+                            )
+                            .padding(.bottom, 4)
+                        }
 
                         ForEach(chatService.messages) { message in
-                            MessageBubble(message: message)
+                            MessageBubble(
+                                message: message,
+                                canHide: isStaffMember
+                            ) {
+                                hideMessage(message)
+                            }
                                 .id(message.id)
                         }
                     }
@@ -79,7 +106,10 @@ struct ChatView: View {
         .background(Color.white)
         .onAppear {
             guard let bookingId = booking.id else { return }
-            chatService.fetchMessages(bookingId: bookingId)
+            chatService.fetchMessages(
+                bookingId: bookingId,
+                hideMessagesHiddenByCurrentStaff: isStaffMember
+            )
             loadCustomerName()
         }
     }
@@ -109,6 +139,19 @@ struct ChatView: View {
             }
         }
     }
+
+    private func hideMessage(_ message: Message) {
+        guard isStaffMember,
+              let bookingId = booking.id,
+              let messageId = message.id else {
+            return
+        }
+
+        chatService.hideMessageForCurrentStaff(
+            bookingId: bookingId,
+            messageId: messageId
+        ) { _ in }
+    }
 }
 
 private struct ConversationHeader: View {
@@ -118,6 +161,7 @@ private struct ConversationHeader: View {
     let bookingDate: String
     let timeSlot: String
     let status: String
+    var showsNavigationIndicator = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -142,6 +186,14 @@ private struct ConversationHeader: View {
                 }
 
                 Spacer()
+
+                if showsNavigationIndicator {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.gray)
+                        .padding(.top, 4)
+                }
             }
 
             Text("Status: \(status)")

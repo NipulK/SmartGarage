@@ -67,6 +67,22 @@ struct ServiceTrackingView: View {
                     InfoLine(title: "Vehicle", value: booking.vehicleName)
                     InfoLine(title: "Service", value: booking.serviceType)
                     InfoLine(title: "Status", value: booking.status)
+
+                    if let completionNote {
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Staff Note")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+
+                            Text(completionNote)
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.black)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                 }
                 .padding()
                 .background(Color.white)
@@ -95,6 +111,17 @@ struct ServiceTrackingView: View {
         .navigationTitle("Service Tracking")
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
+    }
+
+    private var completionNote: String? {
+        guard booking.status.lowercased() == "completed",
+              let note = booking.completionNote?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              !note.isEmpty else {
+            return nil
+        }
+
+        return note
     }
 
     func statusReached(_ step: String) -> Bool {

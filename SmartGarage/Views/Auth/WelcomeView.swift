@@ -17,12 +17,13 @@ struct WelcomeView: View {
 
                     Image("1024")
                         .resizable()
-                        .scaledToFit()
-                        .frame(width: 72, height: 72)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .frame(width: 90, height: 90)
+                        .scaledToFill()
+                        .scaleEffect(1.12)
+                        .frame(width: 118, height: 118)
+                        .clipShape(RoundedRectangle(cornerRadius: 22))
+                        .frame(width: 142, height: 142)
                         .background(Color.blue)
-                        .cornerRadius(20)
+                        .cornerRadius(32)
 
                     Text("SmartGarage")
                         .font(.system(size: 36, weight: .bold))

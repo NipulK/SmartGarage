@@ -8,12 +8,14 @@ struct StaffServiceDetailView: View {
 
     @State private var progress: Double
     @State private var currentStatus: String
+    @State private var completionNote: String
     @State private var showSuccessMessage = false
 
     init(booking: Booking) {
         self.booking = booking
         _currentStatus = State(initialValue: booking.status)
         _progress = State(initialValue: StaffServiceDetailView.progressValue(for: booking.status))
+        _completionNote = State(initialValue: booking.completionNote ?? "")
     }
 
     var body: some View {
@@ -59,6 +61,30 @@ struct StaffServiceDetailView: View {
                 .background(Color.white)
                 .cornerRadius(18)
 
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Staff Comment")
+                        .font(.headline)
+
+                    ZStack(alignment: .topLeading) {
+                        if completionNote.isEmpty {
+                            Text("Add an optional customer note...")
+                                .foregroundColor(.gray.opacity(0.65))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 8)
+                        }
+
+                        TextEditor(text: $completionNote)
+                            .frame(minHeight: 90)
+                            .scrollContentBackground(.hidden)
+                    }
+                    .padding(10)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(18)
+
                 if !bookingService.errorMessage.isEmpty {
                     Text(bookingService.errorMessage)
                         .foregroundColor(.red)
@@ -89,7 +115,10 @@ struct StaffServiceDetailView: View {
                     .buttonStyle(.borderedProminent)
 
                     Button {
-                        updateStatus("Completed")
+                        updateStatus(
+                            "Completed",
+                            completionNote: completionNote
+                        )
                     } label: {
                         Label("Complete Service", systemImage: "checkmark.circle.fill")
                             .frame(maxWidth: .infinity)
@@ -121,7 +150,10 @@ struct StaffServiceDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    func updateStatus(_ status: String) {
+    func updateStatus(
+        _ status: String,
+        completionNote: String? = nil
+    ) {
         guard let bookingId = booking.id else {
             bookingService.errorMessage = "Booking ID not found."
             return
@@ -129,7 +161,8 @@ struct StaffServiceDetailView: View {
 
         bookingService.updateBookingStatus(
             bookingId: bookingId,
-            status: status
+            status: status,
+            completionNote: completionNote
         ) { success in
             if success {
                 currentStatus = status

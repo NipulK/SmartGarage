@@ -13,5 +13,6 @@ struct Booking: Identifiable, Codable {
     var timeSlot: String
 
     var status: String
+    var completionNote: String? = nil
     var createdAt: Date
 }

@@ -9,5 +9,6 @@ struct Message: Identifiable, Codable {
     var senderName: String
     var messageText: String
     var bookingId: String
+    var hiddenForStaffIds: [String]? = nil
     var createdAt: Date
 }

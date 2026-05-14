@@ -7,6 +7,10 @@ struct LoginView: View {
     @State private var password = ""
     @State private var goToCustomer = false
     @State private var goToStaff = false
+
+    private var isLoginReady: Bool {
+        password.count == 6 && password.allSatisfy { $0.isNumber }
+    }
     
     var body: some View {
         VStack(spacing: 20) {
@@ -25,10 +29,19 @@ struct LoginView: View {
                 .padding(.horizontal)
             
             SecureField("Password", text: $password)
+                .keyboardType(.numberPad)
                 .padding()
                 .background(Color.gray.opacity(0.2))
                 .cornerRadius(10)
                 .padding(.horizontal)
+                .onChange(of: password) { newValue in
+                    let digits = newValue.filter { $0.isNumber }
+                    let limitedDigits = String(digits.prefix(6))
+
+                    if limitedDigits != newValue {
+                        password = limitedDigits
+                    }
+                }
             
             if !authVM.errorMessage.isEmpty {
                 Text(authVM.errorMessage)
@@ -37,22 +50,25 @@ struct LoginView: View {
                     .padding(.horizontal)
             }
             
-            Button {
-                login()
-            } label: {
-                if authVM.isLoading {
-                    ProgressView()
-                } else {
-                    Text("Login")
-                        .fontWeight(.bold)
+            if isLoginReady {
+                Button {
+                    login()
+                } label: {
+                    if authVM.isLoading {
+                        ProgressView()
+                    } else {
+                        Text("Login")
+                            .fontWeight(.bold)
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .padding(.horizontal)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            .padding(.horizontal)
             
             Spacer()
             

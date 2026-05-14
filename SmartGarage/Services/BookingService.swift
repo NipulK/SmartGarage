@@ -213,14 +213,22 @@ class BookingService: ObservableObject {
     func updateBookingStatus(
         bookingId: String,
         status: String,
+        completionNote: String? = nil,
         completion: @escaping (Bool) -> Void
     ) {
+        var updateData: [String: Any] = [
+            "status": status
+        ]
+
+        if status.lowercased() == "completed" {
+            updateData["completionNote"] =
+            completionNote?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        }
 
         db.collection("bookings")
             .document(bookingId)
-            .updateData([
-                "status": status
-            ]) { error in
+            .updateData(updateData) { error in
 
                 DispatchQueue.main.async {
 

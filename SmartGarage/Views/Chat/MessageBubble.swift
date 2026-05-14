@@ -4,6 +4,8 @@ import FirebaseAuth
 struct MessageBubble: View {
 
     let message: Message
+    var canHide = false
+    var onHide: (() -> Void)?
 
     var isCurrentUser: Bool {
         message.senderId == Auth.auth().currentUser?.uid
@@ -50,6 +52,15 @@ struct MessageBubble: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .contextMenu {
+            if canHide {
+                Button {
+                    onHide?()
+                } label: {
+                    Label("Hide Message", systemImage: "eye.slash")
+                }
+            }
+        }
     }
 }
 

@@ -73,7 +73,10 @@ class ChatService: ObservableObject {
         }
     }
 
-    func fetchMessages(bookingId: String) {
+    func fetchMessages(
+        bookingId: String,
+        hideMessagesHiddenByCurrentStaff: Bool = false
+    ) {
         listener?.remove()
 
         listener = db.collection("chatRooms")
@@ -87,9 +90,49 @@ class ChatService: ObservableObject {
                         return
                     }
 
-                    self.messages = snapshot?.documents.compactMap {
+                    let currentUserId = Auth.auth().currentUser?.uid
+
+                    let messages = snapshot?.documents.compactMap {
                         try? $0.data(as: Message.self)
                     } ?? []
+
+                    if hideMessagesHiddenByCurrentStaff,
+                       let currentUserId {
+                        self.messages = messages.filter {
+                            !($0.hiddenForStaffIds?.contains(currentUserId) ?? false)
+                        }
+                    } else {
+                        self.messages = messages
+                    }
+                }
+            }
+    }
+
+    func hideMessageForCurrentStaff(
+        bookingId: String,
+        messageId: String,
+        completion: @escaping (Bool) -> Void
+    ) {
+        guard let staffId = Auth.auth().currentUser?.uid else {
+            errorMessage = "Staff member not logged in"
+            completion(false)
+            return
+        }
+
+        db.collection("chatRooms")
+            .document(bookingId)
+            .collection("messages")
+            .document(messageId)
+            .updateData([
+                "hiddenForStaffIds": FieldValue.arrayUnion([staffId])
+            ]) { error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        self.errorMessage = error.localizedDescription
+                        completion(false)
+                    } else {
+                        completion(true)
+                    }
                 }
             }
     }
