@@ -5,6 +5,7 @@ struct ChatView: View {
     let booking: Booking
     let senderName: String
 
+
     @StateObject private var chatService = ChatService()
     @StateObject private var bookingService = BookingService()
     @State private var messageText = ""
